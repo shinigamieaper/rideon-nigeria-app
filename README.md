@@ -38,6 +38,7 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+<<<<<<< HEAD
 ## Windows Setup Guide (PowerShell)
 
 - __Prereqs__: Node.js 22.x (you have 22.14.0) and Git.
@@ -102,3 +103,43 @@ Fill values in `.env.local` (see template above). Keep secrets private.
 - MongoDB Atlas start: https://www.mongodb.com/docs/atlas/getting-started/
 - Paystack docs: https://paystack.com/docs/
 >>>>>>> f022ead (Initial commit from Create Next App)
+=======
+## Environment Variables
+
+Create a `.env.local` for local development (not committed) and a `.env.example` checked into the repo as a reference.
+
+Required variables:
+
+```
+# Firebase (client)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# Firebase Admin (server)
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+# IMPORTANT (Windows/PowerShell): Escape newlines as \n and wrap in quotes
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Database
+MONGODB_URI=
+
+# Paystack
+PAYSTACK_SECRET_KEY=
+NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=
+```
+
+Notes:
+- Use `.env.local` for your real secrets. Copy from `.env.example`:
+  - PowerShell: `Copy-Item -Path .env.example -Destination .env.local`
+- Windows escaping for `FIREBASE_PRIVATE_KEY` is crucial; keep the literal `\n` characters.
+- Restart `npm run dev` after adding/updating envs.
+
+## Conventions
+- API responses must be JSON only. Success: 200/201. Client errors: 4xx. Server errors: 500. Error shape: `{ "error": "message" }`.
+- Auth flow: Client Firebase ID token -> Authorization: Bearer -> Backend verifies with Admin -> create profile & role claim -> authorize protected routes by role.
+>>>>>>> 18d9de1 (chore: scaffold Next.js 15 app, add env template and docs)
