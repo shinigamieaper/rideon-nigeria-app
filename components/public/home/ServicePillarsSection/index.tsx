@@ -1,0 +1,148 @@
+"use client";
+import Link from 'next/link';
+import React from 'react';
+import BlurText from '../../../shared/BlurText';
+
+export interface ServicePillarsSectionProps extends React.ComponentPropsWithoutRef<'section'> {
+  /** Controls the section background treatment */
+  background?: 'solid' | 'tinted' | 'transparent';
+}
+
+const ServicePillarsSection = ({ className, background = 'solid', ...rest }: ServicePillarsSectionProps) => {
+  const wrapperBgClass =
+    background === 'transparent'
+      ? 'bg-transparent'
+      : background === 'tinted'
+        ? 'bg-slate-50 dark:bg-slate-900/70 border-y border-slate-200/80 dark:border-slate-800'
+        : 'bg-background';
+  return (
+    <section className={["relative w-full overflow-hidden py-16 sm:py-24", wrapperBgClass, className || ''].join(' ')} {...rest}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2
+            className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl"
+          >
+            <BlurText as="span" text="A Service for Every Journey" animateBy="words" direction="top" delay={100} />
+          </h2>
+        </div>
+
+        <div className="mx-auto mt-16 max-w-none">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {/* Card 1: Pre-Booked Rides */}
+            <div
+              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+              style={{
+                ['--tw-enter-opacity' as any]: 0,
+                ['--tw-enter-blur' as any]: '8px',
+                ['--tw-enter-translate-y' as any]: '2rem',
+                animationDelay: '200ms',
+                transitionTimingFunction: 'ease-in-out',
+              }}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1621619856624-42fd193a0661?w=1080&q=80"
+                alt="2D cartoon depiction of pre-booking a ride"
+                className="h-32 w-auto mx-auto mb-6 rounded-lg object-cover"
+              />
+              <h3 className="mt-0 text-lg font-semibold leading-8 text-slate-900 dark:text-white">
+                <BlurText as="span" text="Pre-Booked Rides" animateBy="words" direction="top" delay={80} />
+              </h3>
+              <BlurText
+                as="p"
+                className="mt-2 text-sm text-slate-600 dark:text-slate-400"
+                text="For the punctual professional. Book your trips in advance and enjoy peace of mind."
+                animateBy="words"
+                direction="top"
+                delay={24}
+              />
+              <div className="mt-auto pt-6">
+                <Link
+                  href="/services/pre-booked-rides"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-300/70 dark:hover:bg-slate-700/70 transition-colors"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 2: Hire a Full-Time Driver */}
+            <div
+              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+              style={{
+                ['--tw-enter-opacity' as any]: 0,
+                ['--tw-enter-blur' as any]: '8px',
+                ['--tw-enter-translate-y' as any]: '2rem',
+                animationDelay: '350ms',
+                transitionTimingFunction: 'ease-in-out',
+              }}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=1080&q=80"
+                alt="2D cartoon depiction of a professional driver"
+                className="h-32 w-auto mx-auto mb-6 rounded-lg object-cover"
+              />
+              <h3 className="mt-0 text-lg font-semibold leading-8 text-slate-900 dark:text-white">
+                <BlurText as="span" text="Hire a Full-Time Driver" animateBy="words" direction="top" delay={80} />
+              </h3>
+              <BlurText
+                as="p"
+                className="mt-2 text-sm text-slate-600 dark:text-slate-400"
+                text="Your personal driver, managed. Access our pool of vetted professionals for a fixed monthly fee."
+                animateBy="words"
+                direction="top"
+                delay={24}
+              />
+              <div className="mt-auto pt-6">
+                <Link
+                  href="/services/hire-a-driver/browse"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-300/70 dark:hover:bg-slate-700/70 transition-colors"
+                >
+                  Explore Drivers
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 3: Corporate Solutions */}
+            <div
+              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+              style={{
+                ['--tw-enter-opacity' as any]: 0,
+                ['--tw-enter-blur' as any]: '8px',
+                ['--tw-enter-translate-y' as any]: '2rem',
+                animationDelay: '500ms',
+                transitionTimingFunction: 'ease-in-out',
+              }}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1635151227785-429f420c6b9d?w=1080&q=80"
+                alt="2D cartoon depiction of corporate transport solutions"
+                className="h-32 w-auto mx-auto mb-6 rounded-lg object-cover"
+              />
+              <h3 className="mt-0 text-lg font-semibold leading-8 text-slate-900 dark:text-white">
+                <BlurText as="span" text="Corporate Solutions" animateBy="words" direction="top" delay={80} />
+              </h3>
+              <BlurText
+                as="p"
+                className="mt-2 text-sm text-slate-600 dark:text-slate-400"
+                text="Streamline your company's travel. Manage trips, control spending, and source executive drivers from one portal."
+                animateBy="words"
+                direction="top"
+                delay={24}
+              />
+              <div className="mt-auto pt-6">
+                <Link
+                  href="/solutions/corporate"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-300/70 dark:hover:bg-slate-700/70 transition-colors"
+                >
+                  Request a Demo
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default ServicePillarsSection;

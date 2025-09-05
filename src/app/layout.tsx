@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Providers from "./providers";
+import { PublicHeader, PublicFooter, DotGrid, GradualBlur } from "../../components";
+import { ThemeScript } from "./theme-script";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -23,11 +26,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
+      <body suppressHydrationWarning className={`${inter.variable} ${geistMono.variable} antialiased transition-colors duration-300`}>
+        <Providers>
+          {/* Page-level brand blur overlays (non-interactive, fixed) */}
+          <GradualBlur target="page" preset="page-header" curve="bezier" />
+          <GradualBlur target="page" preset="page-footer" curve="bezier" />
+
+          <DotGrid>
+            <PublicHeader />
+            {children}
+            <PublicFooter />
+          </DotGrid>
+        </Providers>
       </body>
     </html>
   );
