@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface LeadFormSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Controls the section background treatment */
@@ -59,8 +60,9 @@ export default function LeadFormSection({ className, background = 'solid', ...re
   return (
     <section id="lead-form" className={["py-24 sm:py-32", wrapperBgClass, className].filter(Boolean).join(' ')} {...rest}>
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <div
-          className="relative p-8 sm:p-12 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 animate-in"
+        <RevealOnScroll
+          as="div"
+          className="relative p-8 sm:p-12 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60"
           style={{ ...enterVars, animationDelay: '200ms', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' }}
         >
           <div className="text-center">
@@ -73,6 +75,7 @@ export default function LeadFormSection({ className, background = 'solid', ...re
               delay={250}
             />
           </div>
+        </RevealOnScroll>
 
           <form onSubmit={onSubmit} className="mt-10" noValidate>
             <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
@@ -203,7 +206,6 @@ export default function LeadFormSection({ className, background = 'solid', ...re
             )}
           </form>
         </div>
-      </div>
-    </section>
+      </section>
   );
 }

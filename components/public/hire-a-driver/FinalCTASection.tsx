@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { FC } from 'react';
 import BlurText from '../../shared/BlurText';
+import RevealOnScroll from '../../shared/RevealOnScroll';
 
 const FinalCTASection: FC = () => {
   return (
     <section className="py-24 sm:py-32 bg-slate-50 dark:bg-slate-900/70 border-t border-slate-200/80 dark:border-slate-800">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div
-          className="mx-auto max-w-2xl text-center animate-in"
+        <RevealOnScroll
+          as="div"
+          className="mx-auto max-w-2xl text-center"
           style={{ '--tw-enter-opacity': '0', '--tw-enter-translate-y': '1rem', '--tw-enter-blur': '8px', animationDelay: '400ms' } as React.CSSProperties}
         >
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
@@ -30,7 +32,7 @@ const FinalCTASection: FC = () => {
               <BlurText as="span" text="Explore the Marketplace" animateBy="words" direction="top" delay={60} />
             </Link>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 const VerificationChecklist: React.FC = () => {
   const verificationItems = [
@@ -12,8 +13,9 @@ const VerificationChecklist: React.FC = () => {
   ];
 
   return (
-    <div 
-      className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 animate-in" 
+    <RevealOnScroll 
+      as="div"
+      className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60" 
       style={{
         '--tw-enter-opacity': '0',
         '--tw-enter-translate-y': '1rem',
@@ -32,7 +34,7 @@ const VerificationChecklist: React.FC = () => {
           </li>
         ))}
       </ul>
-    </div>
+    </RevealOnScroll>
   );
 };
 

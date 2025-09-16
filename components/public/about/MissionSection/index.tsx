@@ -1,175 +1,139 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
-import BlurText from '../../../shared/BlurText';
+import React from 'react';
 import Image from 'next/image';
+import BlurText from '../../../shared/BlurText';
 
 type MissionSectionProps = Record<string, never>;
 
-interface Beam {
-  x: number;
-  y: number;
-  width: number;
-  length: number;
-  angle: number; // degrees
-  speed: number;
-  opacity: number;
-  hue: number;
-  pulse: number;
-  pulseSpeed: number;
-}
-
 const MissionSection: React.FC<MissionSectionProps> = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let beams: Beam[] = [];
-    const MINIMUM_BEAMS = 20;
-
-    const container = canvas.parentElement;
-
-    function updateCanvasSize() {
-        if (!container || !canvas || !ctx) return;
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = container.offsetWidth * dpr;
-        canvas.height = container.offsetHeight * dpr;
-        canvas.style.width = `${container.offsetWidth}px`;
-        canvas.style.height = `${container.offsetHeight}px`;
-        ctx.scale(dpr, dpr);
-        const totalBeams = MINIMUM_BEAMS * 1.5;
-        beams = Array.from({ length: totalBeams }, () => createBeam(canvas.width, canvas.height));
-    }
-
-    function createBeam(width: number, height: number): Beam {
-        const angle = -35 + Math.random() * 10;
-        return {
-            x: Math.random() * width * 1.5 - width * 0.25,
-            y: Math.random() * height * 1.5 - height * 0.25,
-            width: 30 + Math.random() * 60,
-            length: height * 2.5,
-            angle: angle,
-            speed: 0.3 + Math.random() * 0.6,
-            opacity: 0.08 + Math.random() * 0.1,
-            hue: 200 + Math.random() * 40, // Blue hues
-            pulse: Math.random() * Math.PI * 2,
-            pulseSpeed: 0.02 + Math.random() * 0.03,
-        }
-    }
-
-    function resetBeam(beam: Beam, index: number, totalBeams: number): Beam {
-        if (!canvas) return beam;
-        beam.y = canvas.height + 100;
-        const column = index % 3;
-        const spacing = canvas.width / 3;
-        beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
-        beam.width = 100 + Math.random() * 100;
-        beam.speed = 0.3 + Math.random() * 0.4;
-        beam.hue = 200 + (index * 40) / totalBeams;
-        beam.opacity = 0.1 + Math.random() * 0.1;
-        return beam;
-    }
-
-    function drawBeam(beam: Beam) {
-        if (!ctx) return;
-        ctx.save();
-        ctx.translate(beam.x, beam.y);
-        ctx.rotate((beam.angle * Math.PI) / 180);
-        const pulsingOpacity = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2);
-        const gradient = ctx.createLinearGradient(0, 0, 0, beam.length);
-        gradient.addColorStop(0, `hsla(${beam.hue}, 85%, 65%, 0)`);
-        gradient.addColorStop(0.1, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity * 0.5})`);
-        gradient.addColorStop(0.4, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity})`);
-        gradient.addColorStop(0.6, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity})`);
-        gradient.addColorStop(0.9, `hsla(${beam.hue}, 85%, 65%, ${pulsingOpacity * 0.5})`);
-        gradient.addColorStop(1, `hsla(${beam.hue}, 85%, 65%, 0)`);
-        ctx.fillStyle = gradient;
-        ctx.fillRect(-beam.width / 2, 0, beam.width, beam.length);
-        ctx.restore();
-    }
-
-    let animationFrameId: number;
-    function animate() {
-        if (!canvas || !ctx) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.filter = "blur(35px)";
-        const totalBeams = beams.length;
-        beams.forEach((beam, index) => {
-            beam.y -= beam.speed;
-            beam.pulse += beam.pulseSpeed;
-            if (beam.y + beam.length < -100) {
-                resetBeam(beam, index, totalBeams);
-            }
-            drawBeam(beam);
-        });
-        animationFrameId = requestAnimationFrame(animate);
-    }
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    animate();
-
-    return () => {
-        window.removeEventListener('resize', updateCanvasSize);
-        cancelAnimationFrame(animationFrameId);
-    }
-  }, []);
-
   return (
-    <div className="relative w-full overflow-hidden bg-slate-950">
-      <canvas ref={canvasRef} className="absolute inset-0 opacity-70"></canvas>
-      <div className="absolute inset-0 bg-slate-950/40" style={{ backdropFilter: 'blur(40px)' }}></div>
+    <>
+      {/* Hero Background Section */}
+      <section className="relative py-24 sm:py-32 overflow-hidden min-h-[600px]">
+        {/* Background Image */}
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src="https://images.pexels.com/photos/15200595/pexels-photo-15200595.jpeg"
+            alt="Professional transportation service in Nigeria"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70 -z-0"></div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div className="animate-in" style={{ '--tw-enter-opacity': '0', '--tw-enter-scale': '0.95', '--tw-enter-blur': '8px', animationDelay: '200ms' } as React.CSSProperties}>
-            <div className="relative aspect-w-4 aspect-h-3 rounded-2xl overflow-hidden shadow-2xl shadow-blue-900/40">
-              <Image
-                src="https://media.istockphoto.com/id/1914467304/photo/woman-near-car-on-the-street.jpg?b=1&s=612x612&w=0&k=20&c=dwS0QP-8yTxpY7v73QX4TdJu9Bzvrc8lZFA0wvM2M0U="
-                alt="Professional team in a modern office setting"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority={false}
-              />
-            </div>
-          </div>
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight animate-in" style={{ '--tw-enter-opacity': '0', '--tw-enter-translate-y': '1rem', animationDelay: '300ms' } as React.CSSProperties}>
+        {/* Content */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
               <BlurText
                 as="span"
-                text="Redefining Mobility in Nigeria, One Professional Journey at a Time."
+                text="Redefining Mobility in Nigeria,"
                 animateBy="words"
                 direction="top"
                 delay={120}
-                childClassName="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300"
+              />
+              <br />
+              <BlurText
+                as="span"
+                text="One Professional Journey at a Time."
+                animateBy="words"
+                direction="top"
+                delay={120}
               />
             </h1>
-            <div className="mt-10 space-y-8">
-              <div className="animate-in" style={{ '--tw-enter-opacity': '0', '--tw-enter-translate-y': '1rem', animationDelay: '400ms' } as React.CSSProperties}>
-                <h2 className="text-2xl font-medium tracking-tight text-white">
+            <BlurText
+              as="p"
+              text="Join our community of professional drivers and be part of Nigeria's transportation revolution."
+              className="mt-6 text-lg leading-8 text-slate-200 justify-center"
+              animateBy="words"
+              direction="top"
+              delay={24}
+            />
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <a
+                href="/drive-with-us"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-base font-semibold text-white h-12 px-8 transition-all duration-300 ease-in-out hover:opacity-90 hover:scale-105 active:scale-100 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/30"
+                style={{ backgroundColor: '#00529B' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <BlurText as="span" text="Drive With Us" animateBy="words" direction="top" delay={60} />
+              </a>
+              <a
+                href="/services/pre-booked-rides"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-base font-semibold text-white h-12 px-8 transition-all duration-300 ease-in-out hover:opacity-90 hover:scale-105 active:scale-100 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-500/30"
+                style={{ backgroundColor: '#10b981' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <BlurText as="span" text="Book a Ride" animateBy="words" direction="top" delay={60} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission and Vision Cards Section */}
+      <section className="py-24 sm:py-32 bg-background">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              <BlurText as="span" text="Our Foundation" animateBy="words" direction="top" delay={120} />
+            </h2>
+            <BlurText
+              as="p"
+              className="mt-4 text-lg text-slate-600 dark:text-slate-400 justify-center"
+              text="The principles that drive everything we do at RideOn Nigeria."
+              animateBy="words"
+              direction="top"
+              delay={24}
+            />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Mission Card */}
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 rounded-2xl p-6 sm:p-8 lg:p-12">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/10 rounded-2xl mb-6">
+                  <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-semibold tracking-tight mb-4">
                   <BlurText as="span" text="Our Mission" animateBy="words" direction="top" delay={120} />
                 </h2>
                 <BlurText
                   as="p"
-                  className="mt-3 text-lg text-slate-300"
+                  className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed justify-center"
                   text="Our mission is to provide Nigeria's professionals and businesses with a mobility solution that is the gold standard in safety, reliability, and professionalism."
                   animateBy="words"
                   direction="top"
                   delay={24}
                 />
               </div>
-              <div className="animate-in" style={{ '--tw-enter-opacity': '0', '--tw-enter-translate-y': '1rem', animationDelay: '500ms' } as React.CSSProperties}>
-                <h2 className="text-2xl font-medium tracking-tight text-white">
+            </div>
+
+            {/* Vision Card */}
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 rounded-2xl p-6 sm:p-8 lg:p-12">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/10 rounded-2xl mb-6">
+                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-semibold tracking-tight mb-4">
                   <BlurText as="span" text="Our Vision" animateBy="words" direction="top" delay={120} />
                 </h2>
                 <BlurText
                   as="p"
-                  className="mt-3 text-lg text-slate-300"
+                  className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed justify-center"
                   text="To be the most trusted name in premium, pre-booked transportation, empowering economic growth and building a community of respected drivers and satisfied clients."
                   animateBy="words"
                   direction="top"
@@ -179,8 +143,8 @@ const MissionSection: React.FC<MissionSectionProps> = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 };
 

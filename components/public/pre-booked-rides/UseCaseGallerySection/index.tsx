@@ -37,7 +37,7 @@ const UseCaseGallerySection = () => {
           </h2>
           <BlurText
             as="p"
-            className="mt-4 text-lg text-slate-600 dark:text-slate-400"
+            className="mt-4 text-lg text-slate-600 dark:text-slate-400 mx-auto text-center justify-center"
             text="See how RideOn fits seamlessly into your life's most important moments."
             animateBy="words"
             direction="top"

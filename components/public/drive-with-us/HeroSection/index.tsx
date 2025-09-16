@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface HeroSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Optional background image URL */
@@ -40,7 +41,7 @@ export default function HeroSection({ backgroundImageUrl = 'https://i.pinimg.com
             direction="top"
             delay={24}
           />
-          <div className="mt-10 flex items-center justify-center gap-x-6 animate-in" style={{ ...enterVars, animationDelay: '400ms' }}>
+          <RevealOnScroll as="div" className="mt-10 flex items-center justify-center gap-x-6" style={{ ...enterVars, animationDelay: '400ms' }}>
             <Link
               href="/register/driver"
               className="inline-flex items-center justify-center rounded-lg text-base font-semibold text-white h-12 px-8 transition-all duration-300 ease-in-out hover:opacity-90 hover:scale-105 active:scale-100 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/30"
@@ -48,7 +49,7 @@ export default function HeroSection({ backgroundImageUrl = 'https://i.pinimg.com
             >
               Apply to Drive
             </Link>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </section>

@@ -14,7 +14,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ children }) => {
       <div className="absolute inset-0 -z-10">
         <Image
           src="https://images.pexels.com/photos/13801866/pexels-photo-13801866.jpeg"
-          alt="A bustling street in Lagos, Nigeria with yellow buses."
+          alt="A bustling street scene in Nigeria with yellow buses."
           fill
           priority
           sizes="100vw"

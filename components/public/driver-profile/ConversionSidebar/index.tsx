@@ -1,10 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 const ConversionSidebar: React.FC = () => {
   return (
-    <div 
-      className="lg:sticky lg:top-24 h-fit animate-in" 
+    <RevealOnScroll 
+      as="div"
+      className="lg:sticky lg:top-24 h-fit" 
       style={{
         '--tw-enter-opacity': '0',
         '--tw-enter-translate-y': '1rem',
@@ -26,7 +28,7 @@ const ConversionSidebar: React.FC = () => {
           Request an Interview
         </Link>
       </div>
-    </div>
+    </RevealOnScroll>
   );
 };
 

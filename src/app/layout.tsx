@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import { PublicHeader, PublicFooter, DotGrid, GradualBlur } from "../../components";
+import { GradualBlur } from "../../components";
+import PublicChrome from "../../components/layout/PublicChrome";
 import { ThemeScript } from "./theme-script";
 
 const inter = Inter({
@@ -36,11 +37,9 @@ export default function RootLayout({
           <GradualBlur target="page" preset="page-header" curve="bezier" />
           <GradualBlur target="page" preset="page-footer" curve="bezier" />
 
-          <DotGrid>
-            <PublicHeader />
+          <PublicChrome>
             {children}
-            <PublicFooter />
-          </DotGrid>
+          </PublicChrome>
         </Providers>
       </body>
     </html>

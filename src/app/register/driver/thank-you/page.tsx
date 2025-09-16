@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import BlurText from "../../../../../components/shared/BlurText";
+import RevealOnScroll from "../../../../../components/shared/RevealOnScroll";
 
 // Load confetti only on the client
 const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
@@ -30,7 +31,7 @@ export default function DriverThankYouPage() {
         colors={["#00529B", "#34A853", "#0ea5e9", "#22c55e"]}
       />
 
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl p-8 text-center animate-in" style={{ ['--tw-enter-scale' as any]: 0.98, ['--tw-enter-blur' as any]: '12px' }}>
+      <RevealOnScroll as="div" className="relative w-full max-w-2xl rounded-2xl bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl p-8 text-center" style={{ ['--tw-enter-scale' as any]: 0.98, ['--tw-enter-blur' as any]: '12px' }}>
         <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-green-500/10 border border-green-500/30">
           <CheckCircle2 className="h-8 w-8 text-green-500" />
         </div>
@@ -54,7 +55,7 @@ export default function DriverThankYouPage() {
             <BlurText as="span" text="Go to Login" animateBy="words" direction="top" delay={60} />
           </Link>
         </div>
-      </div>
+      </RevealOnScroll>
     </main>
   );
 }

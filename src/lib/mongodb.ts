@@ -19,12 +19,19 @@ declare global {
 
 if (!global._mongoClientPromise) {
   client = new MongoClient(uri, {
-    // Enhanced options for Nigerian ISP DNS issues
+    // Enhanced options for Nigerian ISP network instability
     family: 4, // Use IPv4 only
     connectTimeoutMS: 30000,
     serverSelectionTimeoutMS: 30000,
     socketTimeoutMS: 30000,
-    maxPoolSize: 10,
+    // Keep the pool small in development to reduce NAT/ISP idle drops
+    maxPoolSize: 3,
+    minPoolSize: 0,
+    maxIdleTimeMS: 45000,
+    waitQueueTimeoutMS: 5000,
+    // Note: TCP keepalive is managed by the driver/OS in Node MongoDB v6; no explicit keepAlive options here.
+    // Helpful metadata
+    appName: 'RideON-App',
     retryWrites: true,
     retryReads: true,
     // Add server API version for stability
@@ -34,7 +41,15 @@ if (!global._mongoClientPromise) {
       deprecationErrors: true,
     }
   });
-  global._mongoClientPromise = client.connect();
+  // Perform an initial ping so we fail fast if the connection is unhealthy
+  global._mongoClientPromise = client.connect().then(async (c) => {
+    try {
+      await c.db(dbName).command({ ping: 1 });
+    } catch (err) {
+      console.warn('Initial MongoDB ping failed:', err);
+    }
+    return c;
+  });
 }
 
 const clientPromise = global._mongoClientPromise as Promise<MongoClient>;

@@ -1,5 +1,6 @@
 import React from 'react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 interface ProfessionalSummaryProps {
   summary: string;
@@ -10,8 +11,9 @@ const ProfessionalSummary: React.FC<ProfessionalSummaryProps> = ({ summary }) =>
   const paragraphs = summary.split('\n').filter(p => p.trim().length > 0);
   
   return (
-    <div 
-      className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 animate-in" 
+    <RevealOnScroll 
+      as="div"
+      className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60" 
       style={{
         '--tw-enter-opacity': '0',
         '--tw-enter-translate-y': '1rem',
@@ -44,7 +46,7 @@ const ProfessionalSummary: React.FC<ProfessionalSummaryProps> = ({ summary }) =>
           />
         )}
       </div>
-    </div>
+    </RevealOnScroll>
   );
 };
 

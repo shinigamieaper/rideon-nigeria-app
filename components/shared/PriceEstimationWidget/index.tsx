@@ -2,6 +2,7 @@
 
 import React, { useState, FormEvent } from "react";
 import BlurText from "../BlurText";
+import RevealOnScroll from "../RevealOnScroll";
 
 export interface PriceEstimationWidgetProps extends React.ComponentPropsWithoutRef<"div"> {
   onSubmitForm?: (data: {
@@ -24,7 +25,7 @@ type CSSVars = React.CSSProperties & {
 const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
   onSubmitForm,
   title = "Your Professional Ride. Guaranteed.",
-  subtitle = "Schedule your rides in Lagos with absolute certainty. No surge pricing. No surprises.",
+  subtitle = "Schedule your rides in Nigeria's major cities with absolute certainty. No surge pricing. No surprises.",
   showDescription = true,
   className,
   ...rest
@@ -61,12 +62,12 @@ const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
 
   return (
     <div className={className} {...rest}>
-      <div className="animate-in" style={baseEnterStyle}>
+      <RevealOnScroll as="div" style={baseEnterStyle}>
         <div className="rounded-2xl border border-white/10 bg-black/20 p-6 sm:p-8 shadow-2xl shadow-blue-500/10 backdrop-blur-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             {showDescription && (
               <div className="text-center sm:text-left">
-                <h1 className="animate-in" style={fadeInDownStyle}>
+                <RevealOnScroll as="h1" style={fadeInDownStyle}>
                   <BlurText
                     as="span"
                     text={title}
@@ -74,18 +75,18 @@ const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
                     childClassName="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300"
                     animateBy="words"
                   />
-                </h1>
+                </RevealOnScroll>
                 {subtitle && (
-                  <p className="mt-4 text-lg text-slate-300 animate-in" style={fadeInDownStyle}>
+                  <RevealOnScroll as="p" className="mt-4 text-lg text-slate-300" style={fadeInDownStyle}>
                     <BlurText as="span" text={subtitle} animateBy="words" />
-                  </p>
+                  </RevealOnScroll>
                 )}
               </div>
             )}
 
             <div className="space-y-4">
               {/* Pickup */}
-              <div className="animate-in" style={fadeInDownStyle}>
+              <RevealOnScroll as="div" style={fadeInDownStyle}>
                 <div className="group relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     {/* map-pin */}
@@ -116,10 +117,10 @@ const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
                     autoComplete="off"
                   />
                 </div>
-              </div>
+              </RevealOnScroll>
 
               {/* Destination */}
-              <div className="animate-in" style={fadeInDownStyle}>
+              <RevealOnScroll as="div" style={fadeInDownStyle}>
                 <div className="group relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     {/* flag */}
@@ -149,11 +150,11 @@ const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
                     autoComplete="off"
                   />
                 </div>
-              </div>
+              </RevealOnScroll>
 
               {/* Date & Time */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2 animate-in" style={fadeInDownStyle}>
+                <RevealOnScroll as="div" className="sm:col-span-2" style={fadeInDownStyle}>
                   <div className="group relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       {/* calendar/clock combo icon */}
@@ -185,11 +186,11 @@ const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
                       placeholder="Select Date & Time"
                     />
                   </div>
-                </div>
+                </RevealOnScroll>
               </div>
             </div>
 
-            <div className="animate-in" style={fadeInDownStyle}>
+            <RevealOnScroll as="div" style={fadeInDownStyle}>
               <button
                 type="submit"
                 disabled={!allFilled}
@@ -197,10 +198,10 @@ const PriceEstimationWidget: React.FC<PriceEstimationWidgetProps> = ({
               >
                 <BlurText as="span" text="Get a Guaranteed Price" animateBy="letters" />
               </button>
-            </div>
+            </RevealOnScroll>
           </form>
         </div>
-      </div>
+      </RevealOnScroll>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import BlurText from "../../../../components/shared/BlurText";
+import RevealOnScroll from "../../../../components/shared/RevealOnScroll";
 
 export default function CustomerRegisterPage() {
   const router = useRouter();
@@ -102,8 +103,9 @@ export default function CustomerRegisterPage() {
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center pt-24 pb-12 px-4">
-      <div
-        className="w-full max-w-md rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 lg:p-12 animate-in"
+      <RevealOnScroll
+        as="div"
+        className="w-full max-w-md rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 lg:p-12"
         style={{ ["--tw-enter-scale" as any]: 0.96, ["--tw-enter-blur" as any]: "16px", boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' }}
       >
         <div className="text-center mb-8">
@@ -236,12 +238,7 @@ export default function CustomerRegisterPage() {
             Already have an account? <a href="/login" className="font-medium text-slate-800 dark:text-slate-200 hover:underline">Log In</a>
           </p>
         </form>
-      </div>
-
-      <style jsx global>{`
-        .animate-in { animation: enter 0.6s ease-out forwards; }
-        @keyframes enter { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-      `}</style>
+      </RevealOnScroll>
     </main>
   );
 }

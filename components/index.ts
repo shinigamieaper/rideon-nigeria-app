@@ -12,6 +12,7 @@ export * from './ui/Modal';
 export { default as PublicHeader } from './layout/PublicHeader';
 export { default as PublicFooter } from './layout/PublicFooter';
 export { default as SocialProofSection } from './layout/SocialProofSection';
+export { default as AppHeader } from './layout/AppHeader';
 
 // Shared
 export { default as PriceEstimationWidget } from './shared/PriceEstimationWidget';
@@ -26,6 +27,8 @@ export { default as GradualBlur } from './shared/GradualBlur';
 export type { GradualBlurProps } from './shared/GradualBlur';
 export { default as BlurText } from './shared/BlurText';
 export type { IBlurTextProps as BlurTextProps } from './shared/BlurText';
+export { default as RevealOnScroll } from './shared/RevealOnScroll';
+export type { IRevealOnScrollProps as RevealOnScrollProps } from './shared/RevealOnScroll';
 
 // Public home
 
@@ -76,3 +79,31 @@ export { default as ProfileHeader } from './public/driver-profile/ProfileHeader'
 export { default as ProfessionalSummary } from './public/driver-profile/ProfessionalSummary';
 export { default as VerificationChecklist } from './public/driver-profile/VerificationChecklist';
 export { default as ConversionSidebar } from './public/driver-profile/ConversionSidebar';
+
+// Dashboard Components
+export { default as DashboardView } from './dashboard/DashboardView';
+export { default as DashboardSkeleton } from './dashboard/DashboardSkeleton';
+export { default as DashboardEmptyState } from './dashboard/DashboardEmptyState';
+export { default as DashboardErrorState } from './dashboard/DashboardErrorState';
+export { default as UpcomingTripCard } from './dashboard/UpcomingTripCard';
+export { default as RecentActivityFeed } from './dashboard/RecentActivityFeed';
+
+// UI Components
+export { FloatingDock } from './ui/floating-dock';
+export type { FloatingDockProps } from './ui/floating-dock';
+export { default as NeonThemeToggle } from './ui/NeonThemeToggle';
+export type { NeonThemeToggleProps } from './ui/NeonThemeToggle';
+
+// Shared Components
+export { default as FloatingDockDemo } from './shared/floating-dock-demo';
+export type { FloatingDockDemoProps } from './shared/floating-dock-demo';
+
+// Booking Flow Components
+export { default as BookingStep1_RouteSelection } from './app/booking/BookingStep1_RouteSelection';
+export { default as BookingStep2_ScheduleDetails } from './app/booking/BookingStep2_ScheduleDetails';
+export { default as BookingStep3_Confirmation } from './app/booking/BookingStep3_Confirmation';
+export { default as BookingLoadingState } from './app/booking/BookingLoadingState';
+export { default as BookingErrorState } from './app/booking/BookingErrorState';
+export { default as LocationInputFields } from './app/booking/LocationInputFields';
+export { default as VehicleClassSelector } from './app/booking/VehicleClassSelector';
+export { default as PaymentMethodSelector } from './app/booking/PaymentMethodSelector';

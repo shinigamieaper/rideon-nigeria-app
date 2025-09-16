@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Mail, Phone } from 'lucide-react';
 import BlurText from "../../../../components/shared/BlurText";
+import RevealOnScroll from "../../../../components/shared/RevealOnScroll";
 
 interface FormState {
   fullName: string;
@@ -77,6 +78,15 @@ export default function SupportContactPage() {
         <div className="mt-16 sm:mt-20 flex flex-col-reverse lg:flex-row gap-12 lg:gap-16">
           {/* Left: Form */}
           <div className="lg:w-3/5 w-full">
+            <RevealOnScroll
+              as="div"
+              style={{
+                ['--tw-enter-opacity' as any]: '0',
+                ['--tw-enter-translate-y' as any]: '1rem',
+                ['--tw-enter-blur' as any]: '8px',
+                animationDelay: '150ms'
+              } as React.CSSProperties}
+            >
             <form onSubmit={onSubmit} noValidate className="space-y-6 p-6 sm:p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' }}>
               {/* Name */}
               <div>
@@ -164,10 +174,20 @@ export default function SupportContactPage() {
                 <p className="text-sm text-green-600">Thanks! Your message has been received.</p>
               )}
             </form>
+            </RevealOnScroll>
           </div>
 
           {/* Right: Contact Details */}
           <div className="lg:w-2/5 w-full">
+            <RevealOnScroll
+              as="div"
+              style={{
+                ['--tw-enter-opacity' as any]: '0',
+                ['--tw-enter-translate-y' as any]: '1rem',
+                ['--tw-enter-blur' as any]: '8px',
+                animationDelay: '300ms'
+              } as React.CSSProperties}
+            >
             <div className="h-full flex flex-col justify-center space-y-8">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 mt-1">
@@ -202,6 +222,7 @@ export default function SupportContactPage() {
                 </div>
               </div>
             </div>
+            </RevealOnScroll>
           </div>
         </div>
       </main>

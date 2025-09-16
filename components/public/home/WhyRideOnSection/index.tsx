@@ -3,6 +3,7 @@
 import React from 'react';
 import { Shield, CalendarCheck, Briefcase, BadgeDollarSign } from 'lucide-react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 type CSSVars = React.CSSProperties & {
   '--tw-enter-opacity'?: number | string;
@@ -33,8 +34,8 @@ export default function WhyRideOnSection({ className, background = 'solid', ...r
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2
-            className="animate-in"
+          <RevealOnScroll
+            as="h2"
             style={{
               '--tw-enter-opacity': 0,
               '--tw-enter-blur': '8px',
@@ -48,14 +49,15 @@ export default function WhyRideOnSection({ className, background = 'solid', ...r
               className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl"
               animateBy="words"
             />
-          </h2>
+          </RevealOnScroll>
         </div>
 
         <div className="mx-auto mt-16 max-w-none">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             {/* Absolute Safety */}
-            <div
-              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 '--tw-enter-opacity': 0,
                 '--tw-enter-blur': '8px',
@@ -77,11 +79,12 @@ export default function WhyRideOnSection({ className, background = 'solid', ...r
                   animateBy="words"
                 />
               </p>
-            </div>
+            </RevealOnScroll>
 
             {/* Guaranteed Reliability */}
-            <div
-              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 '--tw-enter-opacity': 0,
                 '--tw-enter-blur': '8px',
@@ -103,11 +106,12 @@ export default function WhyRideOnSection({ className, background = 'solid', ...r
                   animateBy="words"
                 />
               </p>
-            </div>
+            </RevealOnScroll>
 
             {/* Unmatched Professionalism */}
-            <div
-              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 '--tw-enter-opacity': 0,
                 '--tw-enter-blur': '8px',
@@ -129,11 +133,12 @@ export default function WhyRideOnSection({ className, background = 'solid', ...r
                   animateBy="words"
                 />
               </p>
-            </div>
+            </RevealOnScroll>
 
             {/* Transparent Pricing */}
-            <div
-              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col items-center rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 '--tw-enter-opacity': 0,
                 '--tw-enter-blur': '8px',
@@ -155,7 +160,7 @@ export default function WhyRideOnSection({ className, background = 'solid', ...r
                   animateBy="words"
                 />
               </p>
-            </div>
+            </RevealOnScroll>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FC } from 'react';
 import BlurText from '../../shared/BlurText';
+import RevealOnScroll from '../../shared/RevealOnScroll';
 
 const HeroSection: FC = () => {
   return (
@@ -43,8 +44,9 @@ const HeroSection: FC = () => {
             direction="top"
             delay={24}
           />
-          <div
-            className="mt-10 flex items-center justify-center gap-x-6 animate-in"
+          <RevealOnScroll
+            as="div"
+            className="mt-10 flex items-center justify-center gap-x-6"
             style={{ '--tw-enter-opacity': '0', '--tw-enter-translate-y': '1rem', '--tw-enter-blur': '8px', animationDelay: '900ms' } as React.CSSProperties}
           >
             <Link
@@ -54,7 +56,7 @@ const HeroSection: FC = () => {
             >
               <BlurText as="span" text="Browse Available Drivers" animateBy="words" direction="top" delay={60} />
             </Link>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </section>

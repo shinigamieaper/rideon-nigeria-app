@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProfileHeader from '../../../../../../components/public/driver-profile/ProfileHeader';
 import { ProfessionalSummary, VerificationChecklist, ConversionSidebar } from '../../../../../../components';
+import RevealOnScroll from '../../../../../../components/shared/RevealOnScroll';
 
 
 interface Driver {
@@ -53,7 +54,7 @@ async function getDriverById(driverId: string): Promise<Driver | null> {
       averageRating: 4.9,
       yearsOnPlatform: 5,
       placementStatus: 'available',
-      professionalSummary: 'A highly experienced and professional executive driver with over a decade of experience serving high-profile clients and corporate executives in Lagos. Known for an impeccable safety record, deep knowledge of city and interstate routes, and unwavering commitment to punctuality and discretion.\n\nI pride myself on providing a smooth, safe, and comfortable journey, allowing my clients to relax or work while on the move. Familiar with a wide range of luxury vehicles, including armored cars.',
+      professionalSummary: 'A highly experienced and professional executive driver with over a decade of experience serving high-profile clients and corporate executives in major cities across Nigeria. Known for an impeccable safety record, deep knowledge of city and interstate routes, and unwavering commitment to punctuality and discretion.\n\nI pride myself on providing a smooth, safe, and comfortable journey, allowing my clients to relax or work while on the move. Familiar with a wide range of luxury vehicles, including armored cars.',
       fullTimePreferences: {
         willingToTravel: true,
         preferredClientType: 'any'
@@ -183,7 +184,7 @@ export default async function DriverProfilePage({ params }: PageProps) {
     { label: 'Languages Spoken', value: 'English, Yoruba' }, // This could be dynamic
     { 
       label: 'Willing to Travel', 
-      value: driver.fullTimePreferences?.willingToTravel ? 'Yes, Nationwide' : 'Lagos Only' 
+      value: driver.fullTimePreferences?.willingToTravel ? 'Yes, Nationwide' : 'Local City Only' 
     },
     { label: 'Vehicle Familiarity', value: 'SUV, Saloon, Luxury' }, // This could be dynamic
   ];
@@ -193,12 +194,12 @@ export default async function DriverProfilePage({ params }: PageProps) {
     {
       rating: 5,
       comment: "Bayo has been our company's executive driver for two years. His professionalism is unmatched. Always on time, car is immaculate, and he is a very safe driver.",
-      author: "Corporate Client, Ikoyi",
+      author: "Corporate Client",
       date: "May 2024"
     },
     {
       rating: 5,
-      comment: "The best driver I've had in Lagos. He knows all the shortcuts to avoid traffic. Highly recommend.",
+      comment: "The best driver I've had. They know all the shortcuts to avoid traffic. Highly recommend.",
       author: "Pre-Booked Ride Client",
       date: "April 2024"
     }
@@ -227,8 +228,9 @@ export default async function DriverProfilePage({ params }: PageProps) {
               {/* Details & Verification */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Key Details */}
-                <div 
-                  className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 animate-in" 
+                <RevealOnScroll 
+                  as="div"
+                  className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60" 
                   style={{
                     '--tw-enter-opacity': '0',
                     '--tw-enter-translate-y': '1rem',
@@ -245,15 +247,16 @@ export default async function DriverProfilePage({ params }: PageProps) {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </RevealOnScroll>
 
                 {/* Verification Checklist */}
                 <VerificationChecklist />
               </div>
 
               {/* Reviews & Ratings */}
-              <div 
-                className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 animate-in" 
+              <RevealOnScroll 
+                as="div"
+                className="p-8 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60" 
                 style={{
                   '--tw-enter-opacity': '0',
                   '--tw-enter-translate-y': '1rem',
@@ -289,7 +292,7 @@ export default async function DriverProfilePage({ params }: PageProps) {
                     </div>
                   ))}
                 </div>
-              </div>
+              </RevealOnScroll>
             </div>
 
             {/* Right Column: Conversion Block */}

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ShieldCheck, CalendarCheck, BadgeDollarSign } from 'lucide-react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface BenefitsSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Controls the section background treatment */
@@ -28,7 +29,7 @@ export default function BenefitsSection({ className, background = 'solid', ...re
   return (
     <section className={["py-24 sm:py-32", wrapperBgClass, className].filter(Boolean).join(' ')} {...rest}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center animate-in" style={baseEnter}>
+        <RevealOnScroll as="div" className="mx-auto max-w-2xl text-center" style={baseEnter}>
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
             <BlurText as="span" text="Why Partner with RideOn?" animateBy="words" direction="top" delay={120} />
           </h2>
@@ -40,13 +41,14 @@ export default function BenefitsSection({ className, background = 'solid', ...re
             direction="top"
             delay={24}
           />
-        </div>
+        </RevealOnScroll>
 
         <div className="mx-auto mt-16 max-w-none">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {/* Predictable Earnings */}
-            <div
-              className="flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{ ...baseEnter, animationDelay: '200ms' }}
             >
               <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/50">
@@ -63,11 +65,12 @@ export default function BenefitsSection({ className, background = 'solid', ...re
                 direction="top"
                 delay={24}
               />
-            </div>
+            </RevealOnScroll>
 
             {/* Consistent Schedule */}
-            <div
-              className="flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{ ...baseEnter, animationDelay: '300ms' }}
             >
               <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/50">
@@ -84,11 +87,12 @@ export default function BenefitsSection({ className, background = 'solid', ...re
                 direction="top"
                 delay={24}
               />
-            </div>
+            </RevealOnScroll>
 
             {/* Safety & Support */}
-            <div
-              className="flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{ ...baseEnter, animationDelay: '400ms' }}
             >
               <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/50">
@@ -105,7 +109,7 @@ export default function BenefitsSection({ className, background = 'solid', ...re
                 direction="top"
                 delay={24}
               />
-            </div>
+            </RevealOnScroll>
           </div>
         </div>
       </div>

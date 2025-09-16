@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Star, MoveHorizontal } from 'lucide-react';
 import BlurText from '../../shared/BlurText';
+import RevealOnScroll from '../../shared/RevealOnScroll';
 
 interface Testimonial {
   id: number;
@@ -42,7 +43,7 @@ const testimonials: Testimonial[] = [
     initials: 'CN',
     gradient: 'linear-gradient(135deg, #10b981, #059669)',
     rating: 5,
-    quote: "As someone who travels across Lagos for meetings constantly, pre-booking with RideOn gives me peace of mind. The drivers are always professional, the cars are clean, and I never have to worry about surge pricing. It's the only service I trust."
+    quote: "As someone who travels for meetings across Nigeria's major cities, pre-booking with RideOn gives me peace of mind. The drivers are always professional, the cars are clean, and I never have to worry about surge pricing. It's the only service I trust."
   },
   {
     id: 3,
@@ -56,7 +57,7 @@ const testimonials: Testimonial[] = [
 ];
 
 export default function SocialProofSection({ 
-  title = "Trusted by Professionals Across Lagos",
+  title = "Trusted by Professionals Across Nigeria",
   subtitle = "See what our clients, riders, and partners have to say about the RideOn experience.",
   testimonials: propTestimonials,
   background = 'solid',
@@ -202,7 +203,7 @@ export default function SocialProofSection({
           />
         </div>
         
-        <section className="mt-16 animate-in" 
+        <RevealOnScroll as="section" className="mt-16"
                  style={{ 
                    '--tw-enter-opacity': '0', 
                    '--tw-enter-blur': '8px', 
@@ -256,7 +257,7 @@ export default function SocialProofSection({
             </div>
             
             {/* Pagination Dots */}
-            <div className="flex gap-2 mt-8 justify-center animate-in" 
+            <RevealOnScroll as="div" className="flex gap-2 mt-8 justify-center" 
                  style={{ '--tw-enter-opacity': '0', 'animationDelay': '600ms' } as React.CSSProperties}>
               {displayTestimonials.map((testimonial) => (
                 <button
@@ -273,18 +274,18 @@ export default function SocialProofSection({
                   aria-label={`Go to testimonial ${testimonial.id}`}
                 />
               ))}
-            </div>
+            </RevealOnScroll>
             
             {/* Navigation Hint */}
-            <div className="text-center mt-6 text-sm text-slate-500 dark:text-slate-400 animate-in" 
+            <RevealOnScroll as="div" className="text-center mt-6 text-sm text-slate-500 dark:text-slate-400" 
                  style={{ '--tw-enter-opacity': '0', 'animationDelay': '700ms' } as React.CSSProperties}>
               <span className="inline-flex items-center gap-2">
                 <MoveHorizontal className="h-4 w-4" />
                 Drag or click dots to navigate
               </span>
-            </div>
+            </RevealOnScroll>
           </div>
-        </section>
+        </RevealOnScroll>
       </div>
     </div>
   );

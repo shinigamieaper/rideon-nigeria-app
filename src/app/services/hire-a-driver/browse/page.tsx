@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import DriverProfileCard from '../../../../../components/public/marketplace/DriverProfileCard';
+import RevealOnScroll from '../../../../../components/shared/RevealOnScroll';
 
 
 export const metadata: Metadata = {
@@ -93,11 +94,11 @@ export default async function BrowseDriversPage() {
       <main className="overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           {/* Title and Intro */}
-          <div className="text-center mb-12 animate-in" style={{
-            '--tw-enter-opacity': '0',
-            '--tw-enter-translate-y': '1rem',
-            '--tw-enter-blur': '8px',
-            'animationDelay': '100ms'
+          <RevealOnScroll as="div" className="text-center mb-12" style={{
+            ['--tw-enter-opacity' as any]: '0',
+            ['--tw-enter-translate-y' as any]: '1rem',
+            ['--tw-enter-blur' as any]: '8px',
+            animationDelay: '100ms'
           } as React.CSSProperties}>
             <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900 dark:text-white">
               Meet Your Next Professional Driver
@@ -105,14 +106,14 @@ export default async function BrowseDriversPage() {
             <p className="mt-4 max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400">
               Browse our marketplace of vetted, reliable, and professional drivers. Your peace of mind is our priority.
             </p>
-          </div>
+          </RevealOnScroll>
 
           {/* Filter Bar */}
-          <div className="mb-10 p-4 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 animate-in" style={{
-            '--tw-enter-opacity': '0',
-            '--tw-enter-translate-y': '1rem',
-            '--tw-enter-blur': '8px',
-            'animationDelay': '200ms'
+          <RevealOnScroll as="div" className="mb-10 p-4 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60" style={{
+            ['--tw-enter-opacity' as any]: '0',
+            ['--tw-enter-translate-y' as any]: '1rem',
+            ['--tw-enter-blur' as any]: '8px',
+            animationDelay: '200ms'
           } as React.CSSProperties}>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <div className="w-full sm:w-auto flex-1">
@@ -145,7 +146,7 @@ export default async function BrowseDriversPage() {
                 Filter
               </button>
             </div>
-          </div>
+          </RevealOnScroll>
 
           {/* Driver Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">

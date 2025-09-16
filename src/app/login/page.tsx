@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import BlurText from "../../../components/shared/BlurText";
+import RevealOnScroll from "../../../components/shared/RevealOnScroll";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,13 +15,31 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function postSession(idToken: string) {
+    const res = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
+    if (!res.ok) {
+      let msg = `Failed to establish session (${res.status})`;
+      try {
+        const data = await res.json();
+        if (data?.error) msg = data.error;
+      } catch {}
+      throw new Error(msg);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/");
+      const idToken = await auth.currentUser?.getIdToken(true);
+      if (!idToken) throw new Error('Failed to get ID token.');
+      await postSession(idToken);
+      router.replace("/app/dashboard");
     } catch (err: unknown) {
       // Show friendly message
       const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: string }).code) : undefined;
@@ -28,6 +47,7 @@ export default function LoginPage() {
       if (code === "auth/invalid-credential" || code === "auth/wrong-password") message = "Incorrect email or password.";
       if (code === "auth/user-not-found") message = "No account found for this email.";
       if (code === "auth/too-many-requests") message = "Too many attempts. Please try again later.";
+      if (!code && err instanceof Error && err.message) message = err.message;
       setError(message);
     } finally {
       setLoading(false);
@@ -39,7 +59,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push("/");
+      const idToken = await auth.currentUser?.getIdToken(true);
+      if (!idToken) throw new Error('Failed to get ID token from Google sign-in.');
+      await postSession(idToken);
+      router.replace("/app/dashboard");
     } catch {
       setError("Google sign-in failed. Please try again.");
     } finally {
@@ -52,7 +75,7 @@ export default function LoginPage() {
       {/* Background handled globally by DottedBackground */}
 
       <div className="relative w-full max-w-sm">
-        <div className="text-center mb-8 animate-in delay-1">
+        <RevealOnScroll as="div" className="text-center mb-8" style={{ ['--tw-enter-opacity' as any]: '0', ['--tw-enter-translate-y' as any]: '1rem', ['--tw-enter-blur' as any]: '8px', animationDelay: '100ms' } as React.CSSProperties}>
           <Link href="/" className="flex items-center justify-center gap-2 mb-4" aria-label="Home">
             <span className="text-2xl font-semibold tracking-tighter">RideOn Nigeria</span>
           </Link>
@@ -61,15 +84,15 @@ export default function LoginPage() {
           </h1>
           <BlurText
             as="p"
-            className="mt-2 text-sm text-gray-500 dark:text-gray-400"
+            className="mt-2 text-sm text-gray-500 dark:text-gray-400 justify-center"
             text="Log in to continue to your dashboard."
             animateBy="words"
             direction="top"
             delay={24}
           />
-        </div>
+        </RevealOnScroll>
 
-        <div className="w-full rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 lg:p-12 animate-in delay-2" style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' }}>
+        <RevealOnScroll as="div" className="w-full rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 lg:p-12" style={{ ['--tw-enter-opacity' as any]: '0', ['--tw-enter-translate-y' as any]: '1rem', ['--tw-enter-blur' as any]: '8px', animationDelay: '200ms', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' } as React.CSSProperties}>
           {error ? (
             <div role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
               {error}
@@ -163,7 +186,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{" "}
             <Link href="/register" className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300">Sign up</Link>
           </p>
-        </div>
+        </RevealOnScroll>
       </div>
     </main>
   );

@@ -2,11 +2,17 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import BlurText from '../../shared/BlurText';
+import RevealOnScroll from '../../shared/RevealOnScroll';
+import { usePathname } from 'next/navigation';
 
 export default function PublicFooter() {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
 
   type CSSVars = CSSProperties & { [key: `--${string}`]: string | number };
+
+  // Hide footer on authenticated app routes
+  if (pathname?.startsWith('/app')) return null;
 
   return (
     <footer className="bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800/50">
@@ -14,7 +20,7 @@ export default function PublicFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-24">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Brand & Newsletter */}
-          <div className="flex-1 min-w-[240px] max-w-md mb-8 lg:mb-0 animate-in" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "100ms"} as CSSVars}>
+          <RevealOnScroll as="div" className="flex-1 min-w-[240px] max-w-md mb-8 lg:mb-0" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "100ms"} as CSSVars}>
             <Link href="/" className="inline-flex items-center gap-2 text-2xl font-semibold tracking-tighter text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 mb-5">
               <svg className="w-7 h-7 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 16H9m10 0h3m-3-3.5a3.5 3.5 0 1 1-7 0v-9a3.5 3.5 0 1 1 7 0V16Z"/>
@@ -56,12 +62,12 @@ export default function PublicFooter() {
               </button>
             </form>
             <BlurText as="span" className="block mt-2 text-xs text-slate-500 dark:text-slate-500" text="No spam. Unsubscribe anytime." animateBy="words" direction="top" delay={10} />
-          </div>
+          </RevealOnScroll>
 
           {/* Footer Navigation */}
           <div className="flex-1 flex flex-wrap gap-10 lg:gap-16 justify-between">
             {/* Services Links */}
-            <div className="animate-in" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "200ms"} as CSSVars}>
+            <RevealOnScroll as="div" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "200ms"} as CSSVars}>
               <h4 className="text-slate-900 dark:text-white font-semibold mb-4 tracking-tight text-base">
                 <BlurText as="span" text="Services" animateBy="letters" direction="top" delay={16} />
               </h4>
@@ -70,10 +76,10 @@ export default function PublicFooter() {
                 <li><Link href="/services/hire-a-driver" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="Hire a Driver" animateBy="letters" direction="top" delay={12} /></Link></li>
                 <li><Link href="/solutions/corporate" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="Corporate Solutions" animateBy="letters" direction="top" delay={12} /></Link></li>
               </ul>
-            </div>
+            </RevealOnScroll>
             
             {/* Company Links */}
-            <div className="animate-in" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "300ms"} as CSSVars}>
+            <RevealOnScroll as="div" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "300ms"} as CSSVars}>
               <h4 className="text-slate-900 dark:text-white font-semibold mb-4 tracking-tight text-base">
                 <BlurText as="span" text="Company" animateBy="letters" direction="top" delay={16} />
               </h4>
@@ -81,10 +87,10 @@ export default function PublicFooter() {
                 <li><Link href="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="About Us" animateBy="letters" direction="top" delay={12} /></Link></li>
                 <li><Link href="/drive-with-us" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="Drive With Us" animateBy="letters" direction="top" delay={12} /></Link></li>
               </ul>
-            </div>
+            </RevealOnScroll>
             
             {/* Support Links */}
-            <div className="animate-in" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "400ms"} as CSSVars}>
+            <RevealOnScroll as="div" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "400ms"} as CSSVars}>
               <h4 className="text-slate-900 dark:text-white font-semibold mb-4 tracking-tight text-base">
                 <BlurText as="span" text="Support" animateBy="letters" direction="top" delay={16} />
               </h4>
@@ -94,10 +100,10 @@ export default function PublicFooter() {
                 <li><Link href="/support/safety" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="Safety" animateBy="letters" direction="top" delay={12} /></Link></li>
                 <li><Link href="/support/faq" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="FAQ" animateBy="letters" direction="top" delay={12} /></Link></li>
               </ul>
-            </div>
+            </RevealOnScroll>
             
             {/* Legal Links */}
-            <div className="animate-in" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "500ms"} as CSSVars}>
+            <RevealOnScroll as="div" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "500ms"} as CSSVars}>
               <h4 className="text-slate-900 dark:text-white font-semibold mb-4 tracking-tight text-base">
                 <BlurText as="span" text="Legal" animateBy="letters" direction="top" delay={16} />
               </h4>
@@ -105,7 +111,7 @@ export default function PublicFooter() {
                 <li><Link href="/privacy-policy" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="Privacy Policy" animateBy="letters" direction="top" delay={12} /></Link></li>
                 <li><Link href="/terms-of-service" className="hover:text-slate-900 dark:hover:text-white transition-colors"><BlurText as="span" className="inline-block" text="Terms of Service" animateBy="letters" direction="top" delay={12} /></Link></li>
               </ul>
-            </div>
+            </RevealOnScroll>
           </div>
         </div>
         
@@ -113,37 +119,32 @@ export default function PublicFooter() {
         <div className="mt-12 mb-8 w-full h-px bg-slate-200 dark:bg-slate-800"></div>
         
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 animate-in" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "600ms"} as CSSVars}>
+        <RevealOnScroll as="div" className="flex flex-col md:flex-row items-center justify-between gap-6" style={{"--tw-enter-opacity": "0", "--tw-enter-translate-y": "1rem", "--tw-enter-blur": "8px", "animationDelay": "600ms"} as CSSVars}>
           <div className="text-sm text-slate-500 dark:text-slate-400">
             <BlurText as="span" text={`© ${currentYear} RideOn Nigeria. All rights reserved.`} animateBy="words" direction="top" delay={20} />
           </div>
           <div className="flex items-center gap-4">
-            <Link href="https://twitter.com/rideon_nigeria" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="Twitter">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
-              </svg>
-            </Link>
-            <Link href="https://instagram.com/rideon_nigeria" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="Instagram">
+            <Link href="https://www.instagram.com/rideonnigeria/" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="Instagram">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                 <path d="m16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
                 <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
               </svg>
             </Link>
-            <Link href="https://facebook.com/rideon.nigeria" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="Facebook">
+            <Link href="https://www.facebook.com/rideonnigeria/" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="Facebook">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
               </svg>
             </Link>
-            <Link href="https://linkedin.com/company/rideon-nigeria" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="LinkedIn">
+            <Link href="https://ng.linkedin.com/company/rideonnigeria" className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors" aria-label="LinkedIn">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0  0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
                 <rect width="4" height="12" x="2" y="9"/>
                 <circle cx="4" cy="4" r="2"/>
               </svg>
             </Link>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </footer>
   );

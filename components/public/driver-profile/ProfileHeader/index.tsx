@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 interface ProfileHeaderProps {
   driver: {
@@ -15,8 +16,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ driver }) => {
   const displayName = `${driver.firstName} ${driver.lastName.charAt(0)}.`;
   
   return (
-    <div 
-      className="flex flex-col sm:flex-row items-center gap-6 animate-in" 
+    <RevealOnScroll
+      as="div"
+      className="flex flex-col sm:flex-row items-center gap-6"
       style={{
         '--tw-enter-opacity': '0',
         '--tw-enter-translate-y': '1rem',
@@ -48,7 +50,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ driver }) => {
           </span>
         </div>
       </div>
-    </div>
+    </RevealOnScroll>
   );
 };
 

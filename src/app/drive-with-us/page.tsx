@@ -45,7 +45,7 @@ export default function DriveWithUsPage() {
       <DriveWithUsProcessSection background="transparent" />
       <SocialProofSection
         title="Hear From Our Driver Partners"
-        subtitle="Real stories from professionals driving with RideOn across Lagos."
+        subtitle="Real stories from professionals driving with RideOn across Nigeria."
         testimonials={driverTestimonials}
         background="tinted"
       />

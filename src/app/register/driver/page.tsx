@@ -16,6 +16,7 @@ import {
 } from "firebase/auth";
 // Firebase Storage removed (migrated to MongoDB GridFS via API uploads)
 import BlurText from "../../../../components/shared/BlurText";
+import RevealOnScroll from "../../../../components/shared/RevealOnScroll";
 
 type CSSVars = React.CSSProperties & {
   '--tw-enter-scale'?: number | string;
@@ -296,7 +297,7 @@ export default function DriverRegisterPage() {
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center pt-24 pb-12 px-4">
-      <div className="w-full max-w-3xl rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 md:p-12 animate-in" style={{ '--tw-enter-scale': 0.9, '--tw-enter-blur': '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' } as CSSVars}>
+      <RevealOnScroll as="div" className="w-full max-w-3xl rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 md:p-12" style={{ '--tw-enter-scale': 0.9, '--tw-enter-blur': '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' } as CSSVars}>
         {/* Stepper */}
         <div className="flex items-start mb-10">
           {[1,2,3,4].map((s, idx) => (
@@ -481,7 +482,7 @@ export default function DriverRegisterPage() {
             <p className="mt-4 text-sm text-red-600">{error}</p>
           )}
         </form>
-      </div>
+      </RevealOnScroll>
 
       {/* Page-specific styles to mimic reference */}
       <style jsx global>{`
@@ -490,6 +491,7 @@ export default function DriverRegisterPage() {
       `}</style>
     </main>
   );
+
 }
 
 function cryptoRandomString(len: number) {

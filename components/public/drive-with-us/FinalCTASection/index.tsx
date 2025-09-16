@@ -2,6 +2,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import PhoneMockup, { PhoneScreenMedia } from '../../../shared/PhoneMockup';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface FinalCTASectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Controls the section background treatment */
@@ -59,14 +60,14 @@ export default function FinalCTASection({ className, background = 'tinted', ...r
           </div>
 
           {/* Right: Phone Mockup */}
-          <div className="flex justify-center lg:justify-end animate-in" style={{ ...enterBase, animationDelay: '300ms' }}>
+          <RevealOnScroll as="div" className="flex justify-center lg:justify-end" style={{ ...enterBase, animationDelay: '300ms' }}>
             <PhoneMockup className="w-[300px] h-[600px] sm:w-[350px] sm:h-[700px]">
               <PhoneScreenMedia
                 lightSrc="https://placehold.co/700x1400/ffffff/111111?text=Driver+Onboarding"
                 darkSrc="https://placehold.co/700x1400/020617/e2e8f0?text=Driver+Onboarding"
               />
             </PhoneMockup>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </section>

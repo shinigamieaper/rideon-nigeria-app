@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import React from 'react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface ServicePillarsSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Controls the section background treatment */
@@ -29,8 +30,9 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
         <div className="mx-auto mt-16 max-w-none">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {/* Card 1: Pre-Booked Rides */}
-            <div
-              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 ['--tw-enter-opacity' as any]: 0,
                 ['--tw-enter-blur' as any]: '8px',
@@ -40,9 +42,9 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
               }}
             >
               <img
-                src="https://images.unsplash.com/photo-1621619856624-42fd193a0661?w=1080&q=80"
-                alt="2D cartoon depiction of pre-booking a ride"
-                className="h-32 w-auto mx-auto mb-6 rounded-lg object-cover"
+                src="/pre-booked-rides-pillar.png"
+                alt="Nigerian professional woman sitting comfortably in a premium car, representing reliable pre-booked rides"
+                className="h-32 w-auto mx-auto mb-6 rounded-lg object-contain"
               />
               <h3 className="mt-0 text-lg font-semibold leading-8 text-slate-900 dark:text-white">
                 <BlurText as="span" text="Pre-Booked Rides" animateBy="words" direction="top" delay={80} />
@@ -63,11 +65,12 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
                   Learn More
                 </Link>
               </div>
-            </div>
+            </RevealOnScroll>
 
             {/* Card 2: Hire a Full-Time Driver */}
-            <div
-              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 ['--tw-enter-opacity' as any]: 0,
                 ['--tw-enter-blur' as any]: '8px',
@@ -77,9 +80,9 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
               }}
             >
               <img
-                src="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=1080&q=80"
-                alt="2D cartoon depiction of a professional driver"
-                className="h-32 w-auto mx-auto mb-6 rounded-lg object-cover"
+                src="/hire-a-driver-pillar.png"
+                alt="Professional Nigerian driver standing confidently next to a premium sedan, representing trusted full-time driver service"
+                className="h-32 w-auto mx-auto mb-6 rounded-lg object-contain"
               />
               <h3 className="mt-0 text-lg font-semibold leading-8 text-slate-900 dark:text-white">
                 <BlurText as="span" text="Hire a Full-Time Driver" animateBy="words" direction="top" delay={80} />
@@ -100,11 +103,12 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
                   Explore Drivers
                 </Link>
               </div>
-            </div>
+            </RevealOnScroll>
 
             {/* Card 3: Corporate Solutions */}
-            <div
-              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl animate-in"
+            <RevealOnScroll
+              as="div"
+              className="flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-xl backdrop-blur-lg transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl"
               style={{
                 ['--tw-enter-opacity' as any]: 0,
                 ['--tw-enter-blur' as any]: '8px',
@@ -114,9 +118,9 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
               }}
             >
               <img
-                src="https://images.unsplash.com/photo-1635151227785-429f420c6b9d?w=1080&q=80"
-                alt="2D cartoon depiction of corporate transport solutions"
-                className="h-32 w-auto mx-auto mb-6 rounded-lg object-cover"
+                src="/corporate-solutions-pillar.png"
+                alt="Nigerian business executive coordinating with professional drivers and fleet vehicles, representing corporate transportation management"
+                className="h-32 w-auto mx-auto mb-6 rounded-lg object-contain"
               />
               <h3 className="mt-0 text-lg font-semibold leading-8 text-slate-900 dark:text-white">
                 <BlurText as="span" text="Corporate Solutions" animateBy="words" direction="top" delay={80} />
@@ -137,7 +141,7 @@ const ServicePillarsSection = ({ className, background = 'solid', ...rest }: Ser
                   Request a Demo
                 </Link>
               </div>
-            </div>
+            </RevealOnScroll>
           </div>
         </div>
       </div>

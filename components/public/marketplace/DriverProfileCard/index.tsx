@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Star, Shield, CheckCircle2 } from 'lucide-react';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 interface Driver {
   id: string;
@@ -21,15 +22,18 @@ const DriverProfileCard: React.FC<DriverProfileCardProps> = ({ driver }) => {
   const displayName = `${driver.firstName} ${driver.lastName.charAt(0)}.`;
   
   return (
-    <Link 
-      href={`/services/hire-a-driver/profile/${driver.id}`}
-      className="group block animate-in"
+    <RevealOnScroll
+      as="div"
       style={{
         '--tw-enter-opacity': '0',
         '--tw-enter-translate-y': '1rem',
         '--tw-enter-blur': '8px'
       } as React.CSSProperties}
     >
+      <Link 
+        href={`/services/hire-a-driver/profile/${driver.id}`}
+        className="group block"
+      >
       <div className="relative p-6 rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-700/60 h-full flex flex-col group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 ease-in-out">
         <div className="flex-grow">
           <img 
@@ -62,7 +66,8 @@ const DriverProfileCard: React.FC<DriverProfileCardProps> = ({ driver }) => {
           </span>
         </div>
       </div>
-    </Link>
+      </Link>
+    </RevealOnScroll>
   );
 };
 

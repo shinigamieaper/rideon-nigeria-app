@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import InfiniteLogoScroller from '../../../shared/InfiniteLogoScroller';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface CorporateHeroSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Background image URL for the hero */
@@ -92,8 +93,9 @@ export default function HeroSection({
           delay={24}
         />
 
-        <div
-          className="mt-10 flex items-center justify-center gap-x-6 animate-in"
+        <RevealOnScroll
+          as="div"
+          className="mt-10 flex items-center justify-center gap-x-6"
           style={{ ...enterVars, animationDelay: '900ms' }}
         >
           <Link
@@ -103,7 +105,7 @@ export default function HeroSection({
           >
             Request a Demo
           </Link>
-        </div>
+        </RevealOnScroll>
 
         <div className="mt-16 sm:mt-20 w-full relative z-20">
           <BlurText

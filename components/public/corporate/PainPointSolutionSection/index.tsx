@@ -2,6 +2,7 @@ import * as React from 'react';
 import { CreditCard, ShieldCheck, Users } from 'lucide-react';
 import PhoneMockup, { PhoneScreenMedia } from '../../../shared/PhoneMockup';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface PainPointSolutionSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Controls the section background treatment */
@@ -32,7 +33,7 @@ export default function PainPointSolutionSection({ className, background = 'soli
     <section className={["py-24 sm:py-32", wrapperBgClass, className].filter(Boolean).join(' ')} {...rest}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mx-auto max-w-2xl lg:text-center animate-in" style={enterVars}>
+        <RevealOnScroll as="div" className="mx-auto max-w-2xl lg:text-center" style={enterVars}>
           <h2 className="text-base font-semibold leading-7" style={{ color: '#00529B' }}>
             <BlurText as="span" text="Business Solutions" animateBy="words" direction="top" delay={100} />
           </h2>
@@ -52,15 +53,16 @@ export default function PainPointSolutionSection({ className, background = 'soli
             direction="top"
             delay={24}
           />
-        </div>
+        </RevealOnScroll>
 
         {/* Grid */}
         <div className="mt-16 sm:mt-20 lg:mt-24">
           <div className="grid grid-cols-1 gap-y-16 lg:grid-cols-10 lg:gap-x-8 lg:items-start">
             {/* Left Card */}
             <div className="lg:col-span-3">
-              <div
-                className="flex flex-col p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out animate-in"
+              <RevealOnScroll
+                as="div"
+                className="flex flex-col p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
                 style={{ ...enterVars, animationDelay: '400ms' }}
               >
                 <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -77,23 +79,24 @@ export default function PainPointSolutionSection({ className, background = 'soli
                   direction="top"
                   delay={24}
                 />
-              </div>
+              </RevealOnScroll>
             </div>
 
             {/* Phone Mockup Center */}
-            <div className="lg:col-span-4 order-first lg:order-none animate-in" style={{ ...enterVars, animationDelay: '200ms' }}>
+            <RevealOnScroll as="div" className="lg:col-span-4 order-first lg:order-none" style={{ ...enterVars, animationDelay: '200ms' }}>
               <PhoneMockup>
                 <PhoneScreenMedia
                   lightSrc="https://placehold.co/700x1400/ffffff/111111?text=Light+Screen"
                   darkSrc="https://placehold.co/700x1400/020617/e2e8f0?text=Dark+Screen"
                 />
               </PhoneMockup>
-            </div>
+            </RevealOnScroll>
 
             {/* Right Cards */}
             <div className="lg:col-span-3 space-y-12">
-              <div
-                className="flex flex-col p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out animate-in"
+              <RevealOnScroll
+                as="div"
+                className="flex flex-col p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
                 style={{ ...enterVars, animationDelay: '600ms' }}
               >
                 <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -110,10 +113,11 @@ export default function PainPointSolutionSection({ className, background = 'soli
                   direction="top"
                   delay={24}
                 />
-              </div>
+              </RevealOnScroll>
 
-              <div
-                className="flex flex-col p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out animate-in"
+              <RevealOnScroll
+                as="div"
+                className="flex flex-col p-8 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg shadow-lg border border-slate-200/80 dark:border-slate-800/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
                 style={{ ...enterVars, animationDelay: '800ms' }}
               >
                 <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -130,7 +134,7 @@ export default function PainPointSolutionSection({ className, background = 'soli
                   direction="top"
                   delay={24}
                 />
-              </div>
+              </RevealOnScroll>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { UserPlus, ClipboardCheck, ShieldCheck, Car } from 'lucide-react';
 import BlurText from '../../../shared/BlurText';
+import RevealOnScroll from '../../../shared/RevealOnScroll';
 
 export interface ProcessSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /** Controls the section background treatment */
@@ -59,7 +60,7 @@ export default function ProcessSection({ className, background = 'solid', ...res
   return (
     <section className={["py-24 sm:py-32", wrapperBgClass, className].filter(Boolean).join(' ')} {...rest}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center animate-in" style={baseEnter}>
+        <RevealOnScroll as="div" className="mx-auto max-w-2xl text-center" style={baseEnter}>
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
             <BlurText as="span" text="How the Process Works" animateBy="words" direction="top" delay={120} />
           </h2>
@@ -71,7 +72,7 @@ export default function ProcessSection({ className, background = 'solid', ...res
             direction="top"
             delay={24}
           />
-        </div>
+        </RevealOnScroll>
 
         <div className="mt-16 lg:mt-20">
           <ol className="relative grid grid-cols-1 gap-10 lg:grid-cols-4">
@@ -82,8 +83,9 @@ export default function ProcessSection({ className, background = 'solid', ...res
                   <div className="hidden lg:block absolute top-12 left-[60%] right-[-10%] h-0.5 bg-gradient-to-r from-blue-500/60 via-indigo-500/60 to-emerald-500/60" aria-hidden="true" />
                 )}
 
-                <div
-                  className="relative flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-8 shadow-lg backdrop-blur-lg animate-in hover:-translate-y-1 hover:shadow-2xl transition-all duration-300"
+                <RevealOnScroll
+                  as="div"
+                  className="relative flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-8 shadow-lg backdrop-blur-lg hover:-translate-y-1 hover:shadow-2xl transition-all duration-300"
                   style={{ ...baseEnter, animationDelay: delay }}
                 >
                   <div className="mb-6 h-14 w-14 rounded-xl bg-blue-100 dark:bg-blue-950/50 flex items-center justify-center">
@@ -101,7 +103,7 @@ export default function ProcessSection({ className, background = 'solid', ...res
                     delay={24}
                   />
                   <div className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">Step {id}</div>
-                </div>
+                </RevealOnScroll>
               </li>
             ))}
           </ol>

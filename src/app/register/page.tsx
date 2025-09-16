@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Car, User } from "lucide-react";
 import BlurText from "../../../components/shared/BlurText";
+import RevealOnScroll from "../../../components/shared/RevealOnScroll";
 
 export default function RegisterPage() {
   return (
@@ -10,7 +11,7 @@ export default function RegisterPage() {
       {/* Background handled globally by DottedBackground */}
 
       <div className="relative w-full max-w-4xl text-center">
-        <div className="mb-12 animate-in">
+        <RevealOnScroll as="div" className="mb-12" style={{ ['--tw-enter-opacity' as any]: '0', ['--tw-enter-translate-y' as any]: '1rem', ['--tw-enter-blur' as any]: '8px' } as React.CSSProperties}>
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
             <BlurText as="span" text="Join RideOn" animateBy="words" direction="top" delay={120} />
           </h1>
@@ -22,7 +23,7 @@ export default function RegisterPage() {
             direction="top"
             delay={24}
           />
-        </div>
+        </RevealOnScroll>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* I Need a Ride */}
@@ -80,14 +81,14 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <div className="mt-12 text-center animate-in">
+        <RevealOnScroll as="div" className="mt-12 text-center" style={{ ['--tw-enter-opacity' as any]: '0', ['--tw-enter-translate-y' as any]: '1rem', ['--tw-enter-blur' as any]: '8px' } as React.CSSProperties}>
           <p className="text-gray-500 dark:text-slate-400">
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300">
               Log In
             </Link>
           </p>
-        </div>
+        </RevealOnScroll>
       </div>
     </main>
   );

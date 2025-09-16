@@ -2,7 +2,7 @@ import * as React from 'react';
 
 export interface HeroSectionProps extends React.ComponentPropsWithoutRef<'section'> {
   /**
-   * Background image URL. Defaults to the Lagos street image from the reference.
+   * Background image URL. Defaults to a city street image from the reference.
    */
   backgroundUrl?: string;
   /**
@@ -43,7 +43,7 @@ export default function HeroSection({
         {/* Using img to match reference visual and allow external URL */}
         <img
           src={backgroundUrl}
-          alt="Night view of a bustling city street in Lagos with light trails from cars"
+          alt="Night view of a bustling city street with light trails from cars"
           className="h-full w-full object-cover animate-zoom"
         />
         <div className={`absolute inset-0 ${overlayGradientClassName}`}></div>

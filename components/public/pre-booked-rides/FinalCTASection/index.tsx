@@ -9,7 +9,7 @@ const FinalCTASection = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-            <BlurText as="span" text="Ready for a better way to travel in Lagos?" animateBy="words" direction="top" delay={120} />
+            <BlurText as="span" text="Ready for a better way to travel?" animateBy="words" direction="top" delay={120} />
           </h2>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
