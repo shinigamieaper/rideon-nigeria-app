@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import BlurText from "../../../components/shared/BlurText";
@@ -25,10 +26,13 @@ export default function ForgotPasswordPage() {
       } as const;
       await sendPasswordResetEmail(auth, email, actionCodeSettings);
       setMessage(
-        "If an account exists for this email, a reset link has been sent."
+        "If an account exists for this email, a reset link has been sent.",
       );
     } catch (err: unknown) {
-      const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: string }).code) : undefined;
+      const code =
+        typeof err === "object" && err && "code" in err
+          ? String((err as { code?: string }).code)
+          : undefined;
       // Do not reveal whether the email exists. Show generic success for common cases.
       const generic =
         "If an account exists for this email, a reset link has been sent.";
@@ -54,11 +58,28 @@ export default function ForgotPasswordPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="mb-4 flex items-center justify-center gap-2" aria-label="Home">
-            <span className="text-2xl font-semibold tracking-tighter">RideOn Nigeria</span>
+          <Link
+            href="/"
+            className="mb-4 flex items-center justify-center gap-2"
+            aria-label="Home"
+          >
+            <Image
+              src="/RIDEONNIGERIA%20LOGO.png"
+              alt="RideOn Nigeria"
+              width={1024}
+              height={1024}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">
-            <BlurText as="span" text="Forgot Password?" animateBy="words" direction="top" delay={120} />
+            <BlurText
+              as="span"
+              text="Forgot Password?"
+              animateBy="words"
+              direction="top"
+              delay={120}
+            />
           </h1>
           <BlurText
             as="p"

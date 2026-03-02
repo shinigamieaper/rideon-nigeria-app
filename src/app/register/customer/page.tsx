@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import BlurText from "../../../../components/shared/BlurText";
 import RevealOnScroll from "../../../../components/shared/RevealOnScroll";
 
-export default function CustomerRegisterPage() {
+function CustomerRegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextAfter = searchParams.get("next");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -50,7 +54,7 @@ export default function CustomerRegisterPage() {
       setError(
         !termsAccepted
           ? "Please accept the Terms of Service and Privacy Policy."
-          : "Please fix validation errors and try again."
+          : "Please fix validation errors and try again.",
       );
       return;
     }
@@ -58,7 +62,11 @@ export default function CustomerRegisterPage() {
     setIsLoading(true);
     try {
       // 1) Create Firebase Auth user
-      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password,
+      );
       const user = cred.user;
 
       // 2) Get ID token
@@ -83,12 +91,33 @@ export default function CustomerRegisterPage() {
         throw new Error(data?.error || "Failed to complete registration.");
       }
 
-      // 4) Redirect to app dashboard
-      router.push("/app");
+      // 4) Ensure server-side session cookie is set with fresh custom claims
+      try {
+        const u = auth.currentUser;
+        if (u) {
+          // Force refresh to pick up role=customer claim
+          await u.getIdToken(true);
+          const freshToken = await u.getIdToken();
+          await fetch("/api/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken: freshToken, remember: true }),
+          });
+        }
+      } catch {}
+
+      // 5) Redirect to intended destination (if provided), otherwise dashboard
+      if (nextAfter) {
+        router.push(nextAfter);
+      } else {
+        router.push("/app/dashboard");
+      }
     } catch (err: any) {
       const code = err?.code as string | undefined;
       if (code === "auth/email-already-in-use") {
-        setError("This email is already in use. Please log in instead or reset your password.");
+        setError(
+          "This email is already in use. Please log in instead or reset your password.",
+        );
       } else if (code === "auth/weak-password") {
         setError("Password is too weak. Please use at least 8 characters.");
       } else if (code === "auth/invalid-email") {
@@ -106,26 +135,41 @@ export default function CustomerRegisterPage() {
       <RevealOnScroll
         as="div"
         className="w-full max-w-md rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 p-6 sm:p-8 lg:p-12"
-        style={{ ["--tw-enter-scale" as any]: 0.96, ["--tw-enter-blur" as any]: "16px", boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)' }}
+        style={{
+          ["--tw-enter-scale" as any]: 0.96,
+          ["--tw-enter-blur" as any]: "16px",
+          boxShadow:
+            "0 25px 50px -12px rgba(0,0,0,0.25), 0 0px 40px -10px rgba(0, 82, 155, 0.40)",
+        }}
       >
         <div className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-            <BlurText as="span" text="Create your Customer Account" animateBy="words" direction="top" delay={120} />
+            <BlurText
+              as="span"
+              text="Create your Customer Account"
+              animateBy="words"
+              direction="top"
+              delay={120}
+            />
           </h1>
           <BlurText
             as="p"
             className="mt-2 text-slate-600 dark:text-slate-400"
-            text="Get started with fast and reliable rides."
+            text="Get started with premium chauffeur-driven car rentals."
             animateBy="words"
             direction="top"
             delay={24}
           />
         </div>
-
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">First Name</label>
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+              >
+                First Name
+              </label>
               <input
                 id="firstName"
                 type="text"
@@ -137,7 +181,12 @@ export default function CustomerRegisterPage() {
               />
             </div>
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Last Name</label>
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+              >
+                Last Name
+              </label>
               <input
                 id="lastName"
                 type="text"
@@ -151,7 +200,12 @@ export default function CustomerRegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email</label>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+            >
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -168,7 +222,12 @@ export default function CustomerRegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
+            <label
+              htmlFor="phoneNumber"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+            >
+              Phone Number
+            </label>
             <input
               id="phoneNumber"
               type="tel"
@@ -185,7 +244,12 @@ export default function CustomerRegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password</label>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+            >
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -199,11 +263,16 @@ export default function CustomerRegisterPage() {
               }`}
               placeholder="••••••••"
             />
-            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">Use at least 8 characters.</p>
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+              Use at least 8 characters.
+            </p>
           </div>
 
           <div className="pt-2">
-            <label htmlFor="terms" className="flex items-start cursor-pointer group select-none">
+            <label
+              htmlFor="terms"
+              className="flex items-start cursor-pointer group select-none"
+            >
               <input
                 id="terms"
                 type="checkbox"
@@ -212,7 +281,21 @@ export default function CustomerRegisterPage() {
                 className="peer mt-1 h-4 w-4 rounded border-slate-400 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-3 text-sm text-slate-600 dark:text-slate-400">
-                I agree to the RideOn <a href="#" className="font-medium text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="font-medium text-blue-600 hover:underline">Privacy Policy</a>.
+                I agree to the RideOn{" "}
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Privacy Policy
+                </a>
+                .
               </span>
             </label>
           </div>
@@ -235,10 +318,36 @@ export default function CustomerRegisterPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-            Already have an account? <a href="/login" className="font-medium text-slate-800 dark:text-slate-200 hover:underline">Log In</a>
+            Already have an account?{" "}
+            <Link
+              href={
+                nextAfter
+                  ? `/login?next=${encodeURIComponent(nextAfter)}`
+                  : "/login"
+              }
+              className="font-medium text-slate-800 dark:text-slate-200 hover:underline"
+            >
+              Log In
+            </Link>
           </p>
         </form>
       </RevealOnScroll>
     </main>
+  );
+}
+
+export default function CustomerRegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen w-full items-center justify-center pt-24 pb-12 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 shadow-lg p-6 sm:p-8 lg:p-12 text-center text-sm text-slate-500 dark:text-slate-400">
+            Loading registration...
+          </div>
+        </main>
+      }
+    >
+      <CustomerRegisterPageContent />
+    </Suspense>
   );
 }

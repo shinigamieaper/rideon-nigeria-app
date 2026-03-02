@@ -1,0 +1,63 @@
+{
+  "name": "RideOn Full-Time Driver",
+  "short_name": "Full-Time",
+  "description": "Manage your full-time driver placement application, documents, and messages.",
+  "id": "/full-time-driver/",
+  "start_url": "/full-time-driver",
+  "scope": "/full-time-driver/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#00529B",
+  "icons": [
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Application Status",
+      "short_name": "Status",
+      "description": "Track your application review progress",
+      "url": "/full-time-driver/application/status",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Notifications",
+      "short_name": "Alerts",
+      "description": "View your full-time notifications",
+      "url": "/full-time-driver/notifications",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "Open your placement messages",
+      "url": "/full-time-driver/messages",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    }
+  ],
+  "categories": ["business", "productivity", "travel"]
+}

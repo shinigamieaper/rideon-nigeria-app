@@ -1,0 +1,15 @@
+export const VEHICLE_TYPE_OPTIONS = [
+  { value: "Sedan", label: "Sedan" },
+  { value: "SUV", label: "SUV" },
+  { value: "Hatchback", label: "Hatchback" },
+  { value: "Coupe", label: "Coupe" },
+  { value: "Convertible", label: "Convertible" },
+  { value: "Wagon", label: "Wagon" },
+  { value: "Pickup/Truck", label: "Pickup/Truck" },
+  { value: "Van/Minivan", label: "Van/Minivan" },
+  { value: "Bus", label: "Bus" },
+  { value: "Luxury", label: "Luxury" },
+  { value: "Armored", label: "Armored" },
+  { value: "Manual", label: "Manual" },
+  { value: "Automatic", label: "Automatic" },
+];

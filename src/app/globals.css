@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+@import "driver.js/dist/driver.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -22,6 +24,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Dock offset for bottom overlays (Floating Dock height + breathing room). Responsive clamp keeps it smaller on short screens. */
+  --dock-offset: clamp(72px, 14vh, 112px);
 }
 
 :root.dark {
@@ -87,6 +91,24 @@ body {
   font-family: var(--font-sans);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+.rideon-tour-popover {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 14px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.dark .rideon-tour-popover {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+}
+
+/* Hide native scrollbars (we provide a custom scroll indicator) */
+
 
 /* Animation utilities to mirror reference */
 .animate-in {

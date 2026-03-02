@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { ChevronDown, Search } from 'lucide-react';
+import { useMemo, useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
 import BlurText from "../../../../components/shared/BlurText";
 
 interface FaqItem {
@@ -16,57 +16,48 @@ interface FaqSection {
 
 const SECTIONS: FaqSection[] = [
   {
-    title: 'For Riders',
+    title: "For Customers",
     items: [
       {
-        q: 'How do I book a ride?',
-        a: "You can book a ride easily through our app. Enter your pickup and drop-off locations, choose a ride type, and confirm your booking. You'll see the estimated fare and arrival time before you confirm.",
+        q: "How do I book a chauffeur-driven car?",
+        a: "You can book a chauffeur-driven car easily through our app. Browse our vehicle catalog, pick your dates and times, enter your pickup (and optional drop-off) details, then confirm your reservation. You'll see your total rental price upfront before you confirm.",
       },
       {
-        q: 'What safety features are in place?',
-        a: 'Your safety is our priority. All drivers undergo background checks. The app features trip sharing, an SOS button for emergencies, and 24/7 support. You can also see your driver\'s details and rating before they arrive.',
+        q: "What safety features are in place?",
+        a: "Your safety is our priority. All professional chauffeurs undergo background checks and onboarding. For each active reservation, you can see your driver's profile and vehicle details, and our support team is available if you need help.",
       },
     ],
   },
   {
-    title: 'For Drivers',
+    title: "For Drivers",
     items: [
       {
-        q: 'What are the requirements to become a driver?',
-        a: 'You must be at least 21, hold a valid driver\'s license, have a clean driving record, and pass a background check. Your vehicle must meet our safety and condition standards.',
+        q: "What are the requirements to become a driver?",
+        a: "You must be at least 21, hold a valid driver's license, have a clean driving record, and pass a background check. Your vehicle must meet our safety and condition standards.",
       },
       {
-        q: 'How and when do I get paid?',
-        a: 'Earnings are calculated weekly and deposited to your bank account. Track earnings in real-time via the driver app with detailed trip summaries.',
+        q: "How and when do I get paid?",
+        a: "Earnings are calculated weekly and deposited to your bank account. Track earnings in real-time via the driver dashboard with detailed reservation summaries.",
       },
     ],
   },
   {
-    title: 'For Corporate Clients',
+    title: "Billing & Payments",
     items: [
       {
-        q: 'How does the corporate solution work?',
-        a: 'Our corporate platform centralizes your company\'s ground transportation. Set travel policies, manage employee access, and track spending from a dashboard. We provide a single monthly invoice for all trips.',
-      },
-    ],
-  },
-  {
-    title: 'Billing & Payments',
-    items: [
-      {
-        q: 'What payment methods do you accept?',
-        a: 'We accept major credit and debit cards, as well as popular digital wallets. Add multiple payment methods and select your preferred one for each ride.',
+        q: "What payment methods do you accept?",
+        a: "We accept major credit and debit cards, as well as popular digital wallets. Add multiple payment methods and select your preferred one for each reservation.",
       },
       {
-        q: 'How can I get a receipt for my ride?',
-        a: "A receipt is automatically sent to your email after each completed trip. You can also view and download receipts from the app's Your Trips section.",
+        q: "How can I get a receipt for my reservation?",
+        a: "A receipt is automatically sent to your email after each completed reservation. You can also view and download receipts from the app's Reservations section.",
       },
     ],
   },
 ];
 
 export default function FAQPage() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   const filteredSections = useMemo(() => {
@@ -75,7 +66,7 @@ export default function FAQPage() {
     return SECTIONS.map((section) => ({
       ...section,
       items: section.items.filter(
-        (i) => i.q.toLowerCase().includes(q) || i.a.toLowerCase().includes(q)
+        (i) => i.q.toLowerCase().includes(q) || i.a.toLowerCase().includes(q),
       ),
     })).filter((s) => s.items.length > 0);
   }, [query]);
@@ -92,10 +83,22 @@ export default function FAQPage() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
-            <BlurText as="span" text="Frequently Asked Questions" animateBy="words" direction="top" delay={120} />
+            <BlurText
+              as="span"
+              text="Frequently Asked Questions"
+              animateBy="words"
+              direction="top"
+              delay={120}
+            />
           </h1>
           <p className="mt-4 text-lg text-foreground/70">
-            <BlurText as="span" text="Have a question? Find your answer in our knowledge base." animateBy="words" direction="top" delay={24} />
+            <BlurText
+              as="span"
+              text="Have a question? Find your answer in our knowledge base."
+              animateBy="words"
+              direction="top"
+              delay={24}
+            />
           </p>
           {/* Search */}
           <div className="mt-10 max-w-xl mx-auto">
@@ -123,7 +126,13 @@ export default function FAQPage() {
             filteredSections.map((section, si) => (
               <section key={section.title}>
                 <h2 className="text-xl font-semibold tracking-tight">
-                  <BlurText as="span" text={section.title} animateBy="words" direction="top" delay={100} />
+                  <BlurText
+                    as="span"
+                    text={section.title}
+                    animateBy="words"
+                    direction="top"
+                    delay={100}
+                  />
                 </h2>
                 <div className="mt-4 rounded-2xl overflow-hidden bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-slate-200/80 dark:border-slate-800/60 divide-y divide-slate-200/80 dark:divide-slate-800/60 shadow-lg">
                   {section.items.map((item, ii) => {
@@ -140,11 +149,13 @@ export default function FAQPage() {
                           >
                             <span>{item.q}</span>
                             <ChevronDown
-                              className={`h-5 w-5 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                              className={`h-5 w-5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
                             />
                           </button>
                         </h3>
-                        <div className={`overflow-hidden transition-all ${expanded ? 'max-h-96' : 'max-h-0'}`}>
+                        <div
+                          className={`overflow-hidden transition-all ${expanded ? "max-h-96" : "max-h-0"}`}
+                        >
                           <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-foreground/80">
                             {item.a}
                           </div>

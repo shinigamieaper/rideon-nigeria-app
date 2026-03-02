@@ -1,0 +1,63 @@
+{
+  "name": "RideOn Driver",
+  "short_name": "Driver",
+  "description": "Manage your trips, accept booking offers, and track your earnings.",
+  "id": "/driver/",
+  "start_url": "/driver",
+  "scope": "/driver/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#00529B",
+  "icons": [
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Booking Requests",
+      "short_name": "Requests",
+      "description": "View and accept new trip offers",
+      "url": "/driver/bookings/new",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "My Schedule",
+      "short_name": "Schedule",
+      "description": "View your upcoming trips",
+      "url": "/driver/schedule",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Earnings",
+      "short_name": "Earnings",
+      "description": "Track your earnings and payouts",
+      "url": "/driver/earnings",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    }
+  ],
+  "categories": ["business", "productivity", "travel"]
+}

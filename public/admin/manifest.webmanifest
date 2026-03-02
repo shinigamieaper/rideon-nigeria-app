@@ -1,0 +1,56 @@
+{
+  "name": "RideOn Admin",
+  "short_name": "Admin",
+  "description": "Manage operations, bookings, drivers, and system alerts.",
+  "id": "/admin/",
+  "start_url": "/admin",
+  "scope": "/admin/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#00529B",
+  "icons": [
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Open the admin dashboard",
+      "url": "/admin",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Operational Alerts",
+      "short_name": "Alerts",
+      "description": "View recent operational alerts",
+      "url": "/admin/notifications",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    }
+  ],
+  "categories": ["business", "productivity"]
+}

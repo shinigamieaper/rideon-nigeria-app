@@ -1,0 +1,63 @@
+{
+  "name": "RideOn",
+  "short_name": "RideOn",
+  "description": "Book chauffeur-driven cars per day or 4-hour block. Safe, reliable, professional.",
+  "id": "/app/",
+  "start_url": "/app",
+  "scope": "/app/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#00529B",
+  "icons": [
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book a Chauffeur",
+      "short_name": "Book",
+      "description": "Browse fleet and book a ride",
+      "url": "/app/catalog",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "My Reservations",
+      "short_name": "Trips",
+      "description": "View upcoming and past trips",
+      "url": "/app/reservations",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Your RideOn dashboard",
+      "url": "/app",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    }
+  ],
+  "categories": ["travel", "business", "lifestyle"]
+}

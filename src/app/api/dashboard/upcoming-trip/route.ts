@@ -1,69 +1,72 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 
-export const runtime = 'nodejs';
-
-interface BookingDoc {
-  _id: string;
-  customerId: string;
-  scheduledPickupTime: Date;
-  pickupAddress: string;
-  dropoffAddress: string;
-  status: string;
-}
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get('authorization') || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : '';
-    if (!token) {
-      // Not authenticated – return null data gracefully
-      return NextResponse.json({ upcomingTrip: null }, { status: 200 });
-    }
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.substring("Bearer ".length)
+      : "";
 
-    // Defer Firebase Admin import until a token exists
-    const { adminAuth } = await import('@/lib/firebaseAdmin');
+    if (!token) throw new Error("Missing Authorization Bearer token");
+
     const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
 
-    // Defer MongoDB import and connection until after auth is verified
-    const { getDb } = await import('@/lib/mongodb');
-
-    const db = await getDb();
-    const col = db.collection<BookingDoc>('bookings');
-
     const now = new Date();
 
-    const upcoming = await col.find(
-      {
-        customerId: uid,
-        scheduledPickupTime: { $gte: now },
-        status: { $in: ['requested', 'confirmed', 'driver_assigned', 'en_route', 'in_progress'] },
-      },
-      {
-        projection: {
-          _id: 1,
-          scheduledPickupTime: 1,
-          pickupAddress: 1,
-          dropoffAddress: 1,
-        },
-        sort: { scheduledPickupTime: 1 },
-        limit: 1,
-      }
-    ).toArray();
+    // Fetch a reasonable slice and filter in memory to avoid composite index complexities
+    const qSnap = await adminDb
+      .collection("bookings")
+      .where("customerId", "==", uid)
+      .limit(50)
+      .get();
 
-    const doc = upcoming[0] ?? null;
-    return NextResponse.json({
-      upcomingTrip: doc
-        ? {
-            _id: String(doc._id),
-            scheduledPickupTime: doc.scheduledPickupTime,
-            pickupAddress: doc.pickupAddress,
-            dropoffAddress: doc.dropoffAddress,
-          }
-        : null,
-    });
+    const okStatuses = new Set([
+      "confirmed",
+      "driver_assigned",
+      "en_route",
+      "in_progress",
+    ]);
+    const rows = qSnap.docs
+      .map((doc) => {
+        const data = doc.data() as any;
+        const t =
+          data.scheduledPickupTime?.toDate?.() ??
+          data.scheduledPickupTime ??
+          null;
+        const ts = t ? new Date(t) : null;
+        return { id: doc.id, data, ts } as const;
+      })
+      .filter((r) => {
+        const isFuture = r.ts && r.ts >= now;
+        const status = String(r.data?.status || "requested");
+        const paid =
+          String(r.data?.payment?.status || "pending") === "succeeded";
+        return !!isFuture && okStatuses.has(status) && paid;
+      })
+      .sort((a, b) => a.ts!.getTime() - b.ts!.getTime());
+
+    if (rows.length === 0) {
+      return NextResponse.json({ booking: null }, { status: 200 });
+    }
+
+    const first = rows[0];
+    const booking = {
+      _id: first.id,
+      pickupAddress: first.data.pickupAddress ?? "",
+      dropoffAddress: first.data.dropoffAddress ?? "",
+      scheduledPickupTime: first.ts!,
+    };
+
+    return NextResponse.json({ booking }, { status: 200 });
   } catch (error) {
-    console.error('Error in GET /api/dashboard/upcoming-trip:', error);
-    return NextResponse.json({ error: 'Failed to fetch upcoming trip.' }, { status: 500 });
+    console.error("Error fetching upcoming trip:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch upcoming trip." },
+      { status: 500 },
+    );
   }
 }

@@ -1,34 +1,41 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 
-interface ModalProps extends React.ComponentPropsWithoutRef<'div'> {
+interface ModalProps extends React.ComponentPropsWithoutRef<"div"> {
   isOpen: boolean;
   onClose: () => void;
   title: string;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, ...props }) => {
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  className,
+  ...props
+}) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
     };
   }, [isOpen, onClose]);
 
@@ -52,21 +59,27 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-white/60 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl \
-        border border-white/40 dark:border-slate-700 \
-        shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden"
+        className={[
+          "relative w-full max-w-md bg-white/60 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-slate-700 shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden",
+          className || "",
+        ].join(" ")}
         {...props}
       >
         <div className="p-6 sm:p-8">
           <div className="min-w-0">
-            <h3 id="modal-title" className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h3
+              id="modal-title"
+              className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+            >
               {title}
             </h3>
           </div>
-          <div className="mt-4 text-sm text-slate-600 dark:text-slate-300">{children}</div>
+          <div className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+            {children}
+          </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

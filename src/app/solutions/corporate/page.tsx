@@ -1,12 +1,11 @@
-import * as React from 'react';
-import { CorporateHeroSection, PainPointSolutionSection, LeadFormSection } from '../../../../components';
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Services | RideOn Nigeria",
+  description: "Explore RideOn's mobility services across Nigeria.",
+};
 
 export default function CorporateSolutionsPage() {
-  return (
-    <main>
-      <CorporateHeroSection />
-      <PainPointSolutionSection background="tinted" />
-      <LeadFormSection background="transparent" />
-    </main>
-  );
+  redirect("/services");
 }

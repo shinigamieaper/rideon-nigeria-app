@@ -1,6 +1,7 @@
-import * as React from 'react';
+import * as React from "react";
 
-export interface HeroSectionProps extends React.ComponentPropsWithoutRef<'section'> {
+export interface HeroSectionProps
+  extends React.ComponentPropsWithoutRef<"section"> {
   /**
    * Background image URL. Defaults to a city street image from the reference.
    */
@@ -23,9 +24,9 @@ export interface HeroSectionProps extends React.ComponentPropsWithoutRef<'sectio
  * like `PriceEstimationWidget`.
  */
 export default function HeroSection({
-  backgroundUrl = 'https://images.unsplash.com/photo-1659772338512-2d597aee508c?w=2560&q=80',
-  overlayGradientClassName = 'bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent',
-  containerWidthClassName = 'max-w-7xl',
+  backgroundUrl = "/hero-home.png",
+  overlayGradientClassName = "bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent",
+  containerWidthClassName = "max-w-7xl",
   className,
   children,
   ...rest
@@ -33,9 +34,11 @@ export default function HeroSection({
   return (
     <section
       className={[
-        'relative isolate w-full overflow-hidden',
+        "relative isolate w-full overflow-hidden min-h-[600px] lg:min-h-[75vh] flex items-center",
         className,
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...rest}
     >
       {/* Background image */}
@@ -43,20 +46,19 @@ export default function HeroSection({
         {/* Using img to match reference visual and allow external URL */}
         <img
           src={backgroundUrl}
-          alt="Night view of a bustling city street with light trails from cars"
-          className="h-full w-full object-cover animate-zoom"
+          alt="Stylized Nigerian cityscape with roads and vehicles, brand-aligned city hero"
+          className="h-full w-full object-cover lg:object-[center_39%] animate-zoom"
         />
-        <div className={`absolute inset-0 ${overlayGradientClassName}`}></div>
+        <div
+          className={`absolute inset-0 z-0 ${overlayGradientClassName}`}
+        ></div>
       </div>
 
       {/* Content container */}
-      <div className={`relative mx-auto ${containerWidthClassName} px-4 sm:px-6 lg:px-8`}>
-        <div className="flex min-h-[calc(100vh-4rem)] sm:py-24 pt-20 pb-20 items-center">
-          {/* Column that mirrors the reference width where the widget will live */}
-          <div className="w-full max-w-md">
-            {children}
-          </div>
-        </div>
+      <div
+        className={`relative z-10 mx-auto ${containerWidthClassName} px-4 sm:px-6 lg:px-8 w-full`}
+      >
+        <div className="py-20 sm:py-24 lg:py-28">{children}</div>
       </div>
     </section>
   );

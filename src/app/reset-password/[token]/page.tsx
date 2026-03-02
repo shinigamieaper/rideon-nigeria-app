@@ -2,11 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import {
-  confirmPasswordReset,
-  verifyPasswordResetCode,
-} from "firebase/auth";
+import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import BlurText from "../../../../components/shared/BlurText";
 
@@ -44,14 +42,21 @@ export default function ResetPasswordPage() {
       await verifyPasswordResetCode(auth, oobCode);
       // Confirm reset
       await confirmPasswordReset(auth, oobCode, password);
-      setMessage("Your password has been reset successfully. You can now log in.");
+      setMessage(
+        "Your password has been reset successfully. You can now log in.",
+      );
       setPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: string }).code) : undefined;
+      const code =
+        typeof err === "object" && err && "code" in err
+          ? String((err as { code?: string }).code)
+          : undefined;
       let msg = "Failed to reset password. Please try again.";
-      if (code === "auth/expired-action-code") msg = "This reset link has expired. Please request a new one.";
-      if (code === "auth/invalid-action-code") msg = "This reset link is invalid or has already been used.";
+      if (code === "auth/expired-action-code")
+        msg = "This reset link has expired. Please request a new one.";
+      if (code === "auth/invalid-action-code")
+        msg = "This reset link is invalid or has already been used.";
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -64,11 +69,28 @@ export default function ResetPasswordPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="mb-4 flex items-center justify-center gap-2" aria-label="Home">
-            <span className="text-2xl font-semibold tracking-tighter">RideOn Nigeria</span>
+          <Link
+            href="/"
+            className="mb-4 flex items-center justify-center gap-2"
+            aria-label="Home"
+          >
+            <Image
+              src="/RIDEONNIGERIA%20LOGO.png"
+              alt="RideOn Nigeria"
+              width={1024}
+              height={1024}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">
-            <BlurText as="span" text="Set a New Password" animateBy="words" direction="top" delay={120} />
+            <BlurText
+              as="span"
+              text="Set a New Password"
+              animateBy="words"
+              direction="top"
+              delay={120}
+            />
           </h1>
           <BlurText
             as="p"
@@ -86,7 +108,7 @@ export default function ResetPasswordPage() {
               role="status"
               className="mb-4 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300"
             >
-              {message} {" "}
+              {message}{" "}
               <Link
                 href="/login"
                 className="font-medium text-emerald-700 underline underline-offset-4 dark:text-emerald-300"
@@ -107,7 +129,10 @@ export default function ResetPasswordPage() {
 
           <form className="space-y-5" onSubmit={onSubmit}>
             <div>
-              <label htmlFor="new-password" className="mb-2 block text-sm font-medium">
+              <label
+                htmlFor="new-password"
+                className="mb-2 block text-sm font-medium"
+              >
                 New Password
               </label>
               <input
@@ -123,7 +148,10 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium">
+              <label
+                htmlFor="confirm-password"
+                className="mb-2 block text-sm font-medium"
+              >
                 Confirm New Password
               </label>
               <input

@@ -1,6 +1,13 @@
-'use client';
+"use client";
 
-import { Headphones, MapPin, ShieldCheck, Siren, Users, Wrench } from "lucide-react";
+import {
+  Headphones,
+  MapPin,
+  ShieldCheck,
+  Siren,
+  Users,
+  Wrench,
+} from "lucide-react";
 import BlurText from "../../../../components/shared/BlurText";
 
 export const dynamic = "force-static";
@@ -8,40 +15,36 @@ export const dynamic = "force-static";
 export default function SafetyPage() {
   const features = [
     {
-      icon: <ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
-      title: "Rider & Driver Verification",
-      desc:
-        "We verify every driver and rider on our platform to ensure a trusted community. Know who you're riding with before you get in.",
+      icon: (
+        <ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+      ),
+      title: "Customer & Chauffeur Verification",
+      desc: "We verify every professional chauffeur and customer profile on our platform to ensure a trusted community. Know who will be driving you before your reservation begins.",
     },
     {
       icon: <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       title: "Live GPS Tracking",
-      desc:
-        "Every trip is tracked with GPS from start to finish. Share your ride status with friends and family for added peace of mind.",
+      desc: "Every journey is tracked with GPS from start to finish. Share your live journey status with friends and family for added peace of mind.",
     },
     {
       icon: <Siren className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       title: "In-App Emergency Assistance",
-      desc:
-        "In case of an emergency, discreetly alert authorities and our safety team directly from the app with a single tap.",
+      desc: "In case of an emergency, discreetly alert authorities and our safety team directly from the app with a single tap.",
     },
     {
       icon: <Headphones className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       title: "24/7 Support Team",
-      desc:
-        "Our specially trained support team is available around the clock to help with any safety concerns or incidents.",
+      desc: "Our specially trained support team is available around the clock to help with any safety concerns or incidents.",
     },
     {
       icon: <Wrench className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       title: "Vehicle Safety Standards",
-      desc:
-        "All vehicles on our platform pass regular inspections and meet strict safety standards to ensure a safe ride.",
+      desc: "All vehicles on our platform pass regular inspections and meet strict safety standards to ensure a safe, comfortable journey.",
     },
     {
       icon: <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       title: "Community Guidelines",
-      desc:
-        "We enforce clear community guidelines based on mutual respect to create a positive, safe environment for everyone.",
+      desc: "We enforce clear community guidelines based on mutual respect to create a positive, safe environment for everyone.",
     },
   ];
 
@@ -53,10 +56,22 @@ export default function SafetyPage() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
-            <BlurText as="span" text="Our Commitment to Safety" animateBy="words" direction="top" delay={120} />
+            <BlurText
+              as="span"
+              text="Our Commitment to Safety"
+              animateBy="words"
+              direction="top"
+              delay={120}
+            />
           </h1>
           <p className="mt-4 text-lg text-foreground/70">
-            <BlurText as="span" text="Your well-being is our top priority. We're dedicated to keeping you safe on every journey." animateBy="words" direction="top" delay={24} />
+            <BlurText
+              as="span"
+              text="Your well-being is our top priority. We're dedicated to keeping you safe on every journey."
+              animateBy="words"
+              direction="top"
+              delay={24}
+            />
           </p>
         </div>
 
@@ -72,10 +87,22 @@ export default function SafetyPage() {
                   {f.icon}
                 </div>
                 <h3 className="text-lg font-semibold">
-                  <BlurText as="span" text={f.title} animateBy="words" direction="top" delay={100} />
+                  <BlurText
+                    as="span"
+                    text={f.title}
+                    animateBy="words"
+                    direction="top"
+                    delay={100}
+                  />
                 </h3>
                 <p className="text-foreground/70">
-                  <BlurText as="span" text={f.desc} animateBy="words" direction="top" delay={24} />
+                  <BlurText
+                    as="span"
+                    text={f.desc}
+                    animateBy="words"
+                    direction="top"
+                    delay={24}
+                  />
                 </p>
               </div>
             ))}

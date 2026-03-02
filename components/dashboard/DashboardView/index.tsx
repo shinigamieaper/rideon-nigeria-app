@@ -1,71 +1,86 @@
-import React from "react";
+"use client";
+
+import * as React from "react";
+import { CustomerDashboardHero } from "@/components";
 import UpcomingTripCard from "../UpcomingTripCard";
-import RecentActivityFeed from "../RecentActivityFeed";
+import RecentActivityFeed, { ActivityItem } from "../RecentActivityFeed";
+import DashboardSkeleton from "../DashboardSkeleton";
+import DashboardEmptyState from "../DashboardEmptyState";
+import DashboardErrorState from "../DashboardErrorState";
+import { CustomerNotificationPermissionCard } from "@/components";
 
-export interface BookingSummary {
-  _id: string;
-  scheduledPickupTime: string; // ISO string
-  pickupAddress: string;
-  dropoffAddress: string;
-  status?: string;
-}
-
-export interface ActivityItem {
-  id: string;
-  type: "completed" | "hired_driver" | "cancelled" | "requested" | "confirmed" | "other";
-  description: string;
-  amount?: number;
-  timestamp: string; // ISO
-}
-
-export interface DashboardViewProps extends React.ComponentPropsWithoutRef<"section"> {
+export interface DashboardViewProps
+  extends React.ComponentPropsWithoutRef<"div"> {
   firstName?: string;
-  upcomingTrip: BookingSummary | null;
-  recentActivity: ActivityItem[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  upcomingTrip?: {
+    pickupAddress: string;
+    dropoffAddress: string;
+    scheduledPickupTime: string | Date;
+    pickupCoords?: [number, number];
+    dropoffCoords?: [number, number];
+    thumbnailUrl?: string;
+    detailsHref?: string;
+  } | null;
+  recentActivities?: ActivityItem[];
+  userType?: "customer" | "driver";
+  hasPastTrips?: boolean;
 }
 
-export default function DashboardView({ firstName, upcomingTrip, recentActivity, className, ...rest }: DashboardViewProps) {
+export default function DashboardView({
+  firstName = "",
+  loading = false,
+  error = null,
+  onRetry,
+  upcomingTrip = null,
+  recentActivities,
+  userType = "customer",
+  hasPastTrips,
+  className,
+  ...rest
+}: DashboardViewProps) {
+  // Respect empty state: no demo data. If undefined/null, treat as empty
+  const items = recentActivities ?? [];
+
   return (
-    <section className={["min-h-screen", className ?? ""].join(" ")} {...rest}>
-      <div className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-3xl px-4 pt-20 pb-16 bg-background">
-        {/* Greeting */}
-        <div className="mb-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {getGreeting()}, {firstName ? `${firstName}.` : "there."}
-          </h1>
-        </div>
-
-        {/* Primary Action Card */}
-        <div className="rounded-xl shadow-md overflow-hidden mb-6 border border-slate-200/80 dark:border-slate-800/60"
-             style={{ background: "linear-gradient(135deg, #00529B 0%, #003f7a 100%)" }}>
-          <div className="grid grid-cols-2 divide-x divide-white/15">
-            <a href="/services/pre-booked-rides" className="flex flex-col items-center justify-center py-6 text-white hover:bg-white/10 transition-colors">
-              <span className="text-sm font-semibold">Book a Ride</span>
-            </a>
-            <a href="/services/hire-a-driver" className="flex flex-col items-center justify-center py-6 text-white hover:bg-white/10 transition-colors">
-              <span className="text-sm font-semibold">Hire a Driver</span>
-            </a>
+    <div className={["relative", className ?? ""].join(" ")} {...rest}>
+      <main className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 pb-28">
+        {loading ? (
+          <DashboardSkeleton />
+        ) : error ? (
+          <DashboardErrorState onRetry={onRetry} />
+        ) : !upcomingTrip && (!items || items.length === 0) ? (
+          <div className="py-6 space-y-6">
+            <CustomerDashboardHero firstName={firstName} />
+            <CustomerNotificationPermissionCard compact />
+            <DashboardEmptyState
+              firstName={firstName || "there"}
+              ctaHref="/app/catalog"
+              ctaLabel="Explore services"
+              description="Book a chauffeur, request a driver to drive your car, or hire a full-time driver. Choose what you need and we’ll guide you from there."
+            />
           </div>
-        </div>
-
-        {/* Data Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4 gap-6">
-          <div>
-            <UpcomingTripCard booking={upcomingTrip} isLoading={!upcomingTrip && recentActivity.length === 0} />
+        ) : (
+          <div className="py-6 space-y-6">
+            <CustomerDashboardHero firstName={firstName} />
+            <CustomerNotificationPermissionCard compact />
+            {upcomingTrip && (
+              <UpcomingTripCard
+                pickupAddress={upcomingTrip.pickupAddress}
+                dropoffAddress={upcomingTrip.dropoffAddress}
+                scheduledPickupTime={upcomingTrip.scheduledPickupTime}
+                pickupCoords={upcomingTrip.pickupCoords}
+                dropoffCoords={upcomingTrip.dropoffCoords}
+                thumbnailUrl={upcomingTrip.thumbnailUrl}
+                detailsHref={upcomingTrip.detailsHref}
+              />
+            )}
+            {items && items.length > 0 && <RecentActivityFeed items={items} />}
           </div>
-          <div>
-            <RecentActivityFeed activity={recentActivity} isLoading={!upcomingTrip && recentActivity.length === 0} />
-          </div>
-        </div>
-      </div>
-    </section>
+        )}
+      </main>
+    </div>
   );
-}
-
-function getGreeting(): string {
-  const now = new Date();
-  const h = now.getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
 }

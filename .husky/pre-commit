@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run Prettier + ESLint fixes on staged TS/TSX files
+npx --no-install lint-staged
+
+# Run full-project typecheck to block commits on type errors
+npm run typecheck

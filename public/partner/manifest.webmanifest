@@ -1,0 +1,63 @@
+{
+  "name": "RideOn Partner",
+  "short_name": "Partner",
+  "description": "Manage your fleet, reservations, and earnings.",
+  "id": "/partner/",
+  "start_url": "/partner",
+  "scope": "/partner/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#00529B",
+  "icons": [
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RIDEONNIGERIA%20LOGO.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Overview",
+      "short_name": "Home",
+      "description": "Open your partner dashboard",
+      "url": "/partner",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Reservations",
+      "short_name": "Trips",
+      "description": "View new and active reservations",
+      "url": "/partner/reservations",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "description": "Manage your notification preferences",
+      "url": "/partner/settings",
+      "icons": [{ "src": "/RIDEONNIGERIA%20LOGO.png", "sizes": "1024x1024" }]
+    }
+  ],
+  "categories": ["business", "productivity", "travel"]
+}

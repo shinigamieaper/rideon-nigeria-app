@@ -1,101 +1,95 @@
 "use client";
 
-import * as React from "react";
-import { CheckCircle2 } from "lucide-react";
+import React from "react";
+import VehicleClassCard from "@/components/app/VehicleClassCard";
+import type { VehicleClassName } from "@/components/app/BookingProvider";
+import { useBooking } from "@/components/app/BookingProvider";
+import { cn } from "@/lib/utils";
 
-export interface VehicleClassOption {
-  id: string;
-  name: string;
-  capacity: number;
-  imageUrl?: string;
-  price: number; // NGN
-}
+export interface VehicleClassSelectorProps
+  extends React.ComponentPropsWithoutRef<"div"> {}
 
-export interface VehicleClassSelectorProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onSelect'> {
-  routeDetails?: {
-    pickup?: { lat?: number; lng?: number } | null;
-    dropoff?: { lat?: number; lng?: number } | null;
-  } | null;
-  selectedId?: string | null;
-  onSelect: (option: VehicleClassOption) => void;
-}
+const CAR_IMAGES: Record<VehicleClassName, string> = {
+  "Rider Economy":
+    "https://images.unsplash.com/photo-1549921296-3d5a72f12fb9?q=80&w=800&auto=format&fit=crop",
+  "Rider General":
+    "https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?q=80&w=800&auto=format&fit=crop",
+  "Rider Coffee":
+    "https://images.unsplash.com/photo-1511910849309-0dffb3980f5b?q=80&w=800&auto=format&fit=crop",
+  "Rider Dogon":
+    "https://images.unsplash.com/photo-1511396275277-3d51a53f6c87?q=80&w=800&auto=format&fit=crop",
+  "Executive SUV":
+    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800&auto=format&fit=crop",
+  "Group Van":
+    "https://images.unsplash.com/photo-1519582172808-3b64622b20f1?q=80&w=800&auto=format&fit=crop",
+};
 
-export default function VehicleClassSelector({ routeDetails, selectedId, onSelect, className, ...props }: VehicleClassSelectorProps) {
-  const [options, setOptions] = React.useState<VehicleClassOption[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+const PASSENGERS: Record<VehicleClassName, number> = {
+  "Rider Economy": 4,
+  "Rider General": 4,
+  "Rider Coffee": 4,
+  "Rider Dogon": 4,
+  "Executive SUV": 6,
+  "Group Van": 12,
+};
 
-  React.useEffect(() => {
-    const load = async () => {
-      if (!routeDetails?.pickup?.lat || !routeDetails?.pickup?.lng || !routeDetails?.dropoff?.lat || !routeDetails?.dropoff?.lng) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch('/api/fares/calculate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pickup: routeDetails.pickup,
-            dropoff: routeDetails.dropoff,
-          })
-        });
-        if (!res.ok) throw new Error('Failed to fetch fares');
-        const data = await res.json();
-        setOptions(data.vehicleClasses as VehicleClassOption[]);
-      } catch (e: any) {
-        console.error(e);
-        setError('Unable to load fixed fares.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [routeDetails?.pickup?.lat, routeDetails?.pickup?.lng, routeDetails?.dropoff?.lat, routeDetails?.dropoff?.lng]);
+const CLASS_ORDER: VehicleClassName[] = [
+  "Rider Economy",
+  "Rider General",
+  "Rider Coffee",
+  "Rider Dogon",
+  "Executive SUV",
+  "Group Van",
+];
+
+export default function VehicleClassSelector({
+  className,
+  ...rest
+}: VehicleClassSelectorProps) {
+  const { state, setVehicleClass } = useBooking();
+
+  const estimatePriceFor = React.useCallback(
+    (cls: VehicleClassName) => {
+      const distance = state.distanceKm ?? 12;
+      const days =
+        state.startDate && state.endDate
+          ? Math.max(
+              1,
+              Math.ceil(
+                (Date.parse(state.endDate) - Date.parse(state.startDate)) /
+                  (1000 * 60 * 60 * 24),
+              ) + 1,
+            )
+          : 1;
+      const classRate: Record<VehicleClassName, number> = {
+        "Rider Economy": 450,
+        "Rider General": 550,
+        "Rider Coffee": 600,
+        "Rider Dogon": 700,
+        "Executive SUV": 950,
+        "Group Van": 1100,
+      } as const;
+      return Math.round(distance * classRate[cls] * days);
+    },
+    [state.distanceKm, state.endDate, state.startDate],
+  );
 
   return (
-    <div className={className} {...props}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200">Select Vehicle Class</h3>
-        {loading && <span className="text-xs text-slate-500">Loading…</span>}
-      </div>
-      {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
-        {options.map((o) => {
-          const selected = o.id === selectedId;
-          return (
-            <button
-              key={o.id}
-              type="button"
-              onClick={() => onSelect(o)}
-              className={[
-                'snap-start shrink-0 w-56 text-left rounded-2xl border transition-all duration-200',
-                'bg-white/70 dark:bg-slate-900/60 backdrop-blur-md shadow-lg',
-                selected ? 'border-[#00529B] ring-2 ring-[#00529B]/40' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600',
-              ].join(' ')}
-            >
-              <div className="relative">
-                {o.imageUrl ? (
-                  <img src={o.imageUrl} alt={o.name} className="h-28 w-full object-cover rounded-t-2xl" />
-                ) : (
-                  <div className="h-28 w-full rounded-t-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700" />
-                )}
-                {selected && (
-                  <CheckCircle2 className="absolute top-2 right-2 h-6 w-6 text-[#00529B] drop-shadow" aria-hidden />
-                )}
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">{o.name}</p>
-                  <p className="text-[#00529B] font-bold">₦{o.price.toLocaleString()}</p>
-                </div>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Up to {o.capacity} passengers</p>
-              </div>
-            </button>
-          );
-        })}
-        {options.length === 0 && !loading && (
-          <div className="text-sm text-slate-500">Enter pickup and drop-off to see fixed prices.</div>
-        )}
+    <div className={cn("w-full", className)} {...rest}>
+      <div className="flex items-stretch gap-4 overflow-x-auto snap-x snap-mandatory pb-1 pt-1 -mx-1 px-1">
+        {CLASS_ORDER.map((cls, idx) => (
+          <VehicleClassCard
+            key={cls}
+            name={cls}
+            passengers={PASSENGERS[cls]}
+            etaMins={idx + 2}
+            imgSrc={CAR_IMAGES[cls]}
+            priceNgn={estimatePriceFor(cls)}
+            selected={state.vehicleClass === cls}
+            recommended={cls === "Rider Economy"}
+            onClick={() => setVehicleClass(cls)}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Check membership for a given conversation id
+    function isMember(conversationId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+        (
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.memberIds != null &&
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.memberIds.hasAny([request.auth.uid])
+        );
+    }
+
+    // Conversation documents and nested messages
+    match /conversations/{conversationId} {
+      // Allow members to read their conversation summaries; admins can read all
+      allow get, list, read: if (
+        (isSignedIn() && resource.data.memberIds != null && resource.data.memberIds.hasAny([request.auth.uid]))
+        || isAdmin()
+      );
+
+      // For now, block client writes. All writes go through our Admin SDK APIs.
+      allow create, update, delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Allow members to read messages; admins can read all
+        allow get, list, read: if isMember(conversationId) || isAdmin();
+
+        // Block client-side writes for now; sends happen via POST /api/messages/[conversationId]
+        allow create, update, delete: if false;
+      }
+    }
+
+    // Driver documents - allow drivers to read their own doc
+    match /drivers/{driverId} {
+      allow read: if isSignedIn() && request.auth.uid == driverId;
+      allow write: if false; // All writes via Admin SDK
+    }
+
+    // Bookings - allow drivers to read their assigned bookings
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.driverId ||
+        request.auth.uid == resource.data.customerId ||
+        request.auth.uid == resource.data.uid ||
+        isAdmin()
+      );
+      allow write: if false; // All writes via Admin SDK
+    }
+
+    // Users - allow users to read their own profile
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow write: if false; // All writes via Admin SDK
+      
+      // User notifications subcollection
+      match /notifications/{notificationId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow write: if false;
+      }
+    }
+
+    // Full-time driver recruitment applications
+    match /full_time_driver_applications/{userId} {
+      allow get: if (isSignedIn() && request.auth.uid == userId) || isAdmin();
+      allow list: if isAdmin();
+      allow write: if false; // All writes via Admin SDK
+    }
+
+    // Reference request tokens (public link-based flow)
+    match /reference_requests/{token} {
+      allow get: if isAdmin();
+      allow list: if false;
+      allow write: if false; // All writes via Admin SDK
+    }
+
+    // Default: lock down everything else to admins only
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
