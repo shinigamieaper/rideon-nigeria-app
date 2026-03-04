@@ -14,7 +14,11 @@ import { getFirestore } from "firebase/firestore";
 // Reads config from NEXT_PUBLIC_* env vars (do not embed secrets).
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY as string,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN as string,
+  // For custom domains, use the serving domain as authDomain to avoid third-party storage blocking on iOS/Safari/Chrome 115+
+  authDomain:
+    process.env.NODE_ENV === "development"
+      ? (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN as string)
+      : "rideon-nigeria-app-roan.vercel.app",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID as string,
   messagingSenderId: process.env
