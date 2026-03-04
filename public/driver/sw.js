@@ -1,5 +1,6 @@
 /* RideOn Driver App Service Worker (scope: /driver/) */
-const VERSION = 'rideon-driver-v2'; // Bump version for push support
+const BUILD_ID = new URL(self.location.href).searchParams.get('buildId') || '';
+const VERSION = BUILD_ID ? `rideon-driver-${BUILD_ID}` : 'rideon-driver-v2'; // Bump version for push support
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const OFFLINE_URL = '/driver/offline.html';

@@ -6,7 +6,8 @@
    - JSON GET APIs: NetworkFirst (cache on success)
 */
 
-const VERSION = 'rideon-v2';
+const BUILD_ID = new URL(self.location.href).searchParams.get('buildId') || '';
+const VERSION = BUILD_ID ? `rideon-${BUILD_ID}` : 'rideon-v2';
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';

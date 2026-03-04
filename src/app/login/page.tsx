@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,8 @@ import { useSearchParams } from "next/navigation";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   fetchSignInMethodsForEmail,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
@@ -39,6 +41,39 @@ function LoginPageContent() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function completeGoogleRedirect() {
+      try {
+        const result = await getRedirectResult(auth);
+        if (cancelled || !result?.user) return;
+
+        setError(null);
+        setLoading(true);
+        const token = await result.user.getIdToken();
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: token, remember: true }),
+        });
+        router.replace(nextAfter || "/app/dashboard");
+      } catch (e) {
+        console.error("[Auth] Google redirect result failed", e);
+        if (!cancelled) {
+          setError("Google sign-in failed. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    completeGoogleRedirect();
+    return () => {
+      cancelled = true;
+    };
+  }, [router, nextAfter]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -94,7 +129,33 @@ function LoginPageContent() {
     setError(null);
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+      const isIOS = /iPad|iPhone|iPod/i.test(ua);
+
+      // iOS Chrome/Safari often breaks popup auth (opens about:blank). Use redirect.
+      if (isIOS) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (popupErr: unknown) {
+        const code =
+          typeof popupErr === "object" && popupErr && "code" in popupErr
+            ? String((popupErr as { code?: string }).code)
+            : undefined;
+        if (
+          code === "auth/popup-blocked" ||
+          code === "auth/popup-closed-by-user" ||
+          code === "auth/operation-not-supported-in-this-environment"
+        ) {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        throw popupErr;
+      }
+
       const u = auth.currentUser;
       if (u) {
         const token = await u.getIdToken();
@@ -105,7 +166,8 @@ function LoginPageContent() {
         });
       }
       router.push(nextAfter || "/app/dashboard");
-    } catch {
+    } catch (e) {
+      console.error("[Auth] Google sign-in failed", e);
       setError("Google sign-in failed. Please try again.");
     } finally {
       setLoading(false);

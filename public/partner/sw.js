@@ -1,5 +1,6 @@
 /* RideOn Partner Portal Service Worker (scope: /partner/) */
-const VERSION = 'rideon-partner-v1';
+const BUILD_ID = new URL(self.location.href).searchParams.get('buildId') || '';
+const VERSION = BUILD_ID ? `rideon-partner-${BUILD_ID}` : 'rideon-partner-v1';
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const OFFLINE_URL = '/partner/offline.html';

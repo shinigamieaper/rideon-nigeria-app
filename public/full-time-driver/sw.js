@@ -1,5 +1,6 @@
 /* RideOn Full-Time Driver Service Worker (scope: /full-time-driver/) */
-const VERSION = 'rideon-full-time-driver-v1';
+const BUILD_ID = new URL(self.location.href).searchParams.get('buildId') || '';
+const VERSION = BUILD_ID ? `rideon-full-time-driver-${BUILD_ID}` : 'rideon-full-time-driver-v1';
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const OFFLINE_URL = '/full-time-driver/offline.html';

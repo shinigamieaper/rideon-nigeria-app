@@ -1,5 +1,6 @@
 /* RideOn Admin Portal Service Worker (scope: /admin/) */
-const VERSION = 'rideon-admin-v1';
+const BUILD_ID = new URL(self.location.href).searchParams.get('buildId') || '';
+const VERSION = BUILD_ID ? `rideon-admin-${BUILD_ID}` : 'rideon-admin-v1';
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const OFFLINE_URL = '/admin/offline.html';

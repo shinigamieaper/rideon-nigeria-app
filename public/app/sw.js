@@ -1,5 +1,6 @@
 /* RideOn Customer App Service Worker (scope: /app/) */
-const VERSION = 'rideon-app-v2'; // Bump for push support
+const BUILD_ID = new URL(self.location.href).searchParams.get('buildId') || '';
+const VERSION = BUILD_ID ? `rideon-app-${BUILD_ID}` : 'rideon-app-v2'; // Bump for push support
 const STATIC_CACHE = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 const OFFLINE_URL = '/app/offline.html';

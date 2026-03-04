@@ -10,6 +10,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return;
     const path = pathname || window.location.pathname;
 
+    const buildId =
+      (window as unknown as { __NEXT_DATA__?: { buildId?: string } })
+        .__NEXT_DATA__?.buildId || "";
+
     const ensureManifest = (href: string) => {
       const absolute = new URL(href, window.location.origin).href;
       const existing = document.querySelector(
@@ -39,6 +43,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       )
         return;
       try {
+        const swUrlWithVersion = buildId
+          ? `${swUrl}?buildId=${encodeURIComponent(buildId)}`
+          : swUrl;
         // Unregister any legacy root-scoped SW
         const regs = await navigator.serviceWorker.getRegistrations();
         regs.forEach((r) => {
@@ -49,7 +56,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             }
           } catch {}
         });
-        await navigator.serviceWorker.register(swUrl, { scope });
+        const reg = await navigator.serviceWorker.register(swUrlWithVersion, {
+          scope,
+        });
+        reg.update().catch(() => {});
       } catch (err) {
         console.error("[SW] registration failed", err);
       }
