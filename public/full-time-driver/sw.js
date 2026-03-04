@@ -109,6 +109,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
+  // Bypass Firebase auth helpers to avoid OAuth redirect interference on iOS
+  if (url.pathname.startsWith('/__/auth/')) {
+    return;
+  }
+
   if (isHTMLRequest(req)) {
     event.respondWith(
       (async () => {

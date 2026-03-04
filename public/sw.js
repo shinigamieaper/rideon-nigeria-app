@@ -47,6 +47,11 @@ self.addEventListener('fetch', (event) => {
   // Only handle same-origin requests
   if (url.origin !== self.location.origin) return;
 
+  // Bypass Firebase auth helpers to avoid OAuth redirect interference on iOS
+  if (url.pathname.startsWith('/__/auth/')) {
+    return;
+  }
+
   // Navigations → NetworkFirst with offline fallback
   if (isHTMLRequest(req)) {
     event.respondWith(
