@@ -47,20 +47,33 @@ function LoginPageContent() {
 
     async function completeGoogleRedirect() {
       try {
+        console.log("[Login] Checking for Google redirect result");
         const result = await getRedirectResult(auth);
-        if (cancelled || !result?.user) return;
+        if (cancelled || !result?.user) {
+          console.log("[Login] No Google redirect result or cancelled");
+          return;
+        }
 
         setError(null);
         setLoading(true);
         const token = await result.user.getIdToken();
-        await fetch("/api/auth/session", {
+        const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken: token, remember: true }),
         });
+        if (!sessionRes.ok) {
+          const errText = await sessionRes.text();
+          console.error(
+            "[Login] Redirect session API error",
+            sessionRes.status,
+            errText,
+          );
+          throw new Error(`Session API error: ${sessionRes.status}`);
+        }
         router.replace(nextAfter || "/app/dashboard");
       } catch (e) {
-        console.error("[Auth] Google redirect result failed", e);
+        console.error("[Login] Google redirect result failed", e);
         if (!cancelled) {
           setError("Google sign-in failed. Please try again.");
         }
@@ -93,14 +106,24 @@ function LoginPageContent() {
           }
         }
         const token = await u.getIdToken();
-        await fetch("/api/auth/session", {
+        const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken: token, remember: true }),
         });
+        if (!sessionRes.ok) {
+          const errText = await sessionRes.text();
+          console.error(
+            "[Login] Session API error",
+            sessionRes.status,
+            errText,
+          );
+          throw new Error(`Session API error: ${sessionRes.status}`);
+        }
       }
       router.push(nextAfter || "/app/dashboard");
     } catch (err: unknown) {
+      console.error("[Login] onSubmit error", err);
       // Show friendly message
       const code =
         typeof err === "object" && err && "code" in err
@@ -134,13 +157,16 @@ function LoginPageContent() {
 
       // iOS Chrome/Safari often breaks popup auth (opens about:blank). Use redirect.
       if (isIOS) {
+        console.log("[Login] iOS detected: using Google redirect");
         await signInWithRedirect(auth, googleProvider);
         return;
       }
 
       try {
+        console.log("[Login] Non-iOS: attempting Google popup");
         await signInWithPopup(auth, googleProvider);
       } catch (popupErr: unknown) {
+        console.error("[Login] Google popup failed", popupErr);
         const code =
           typeof popupErr === "object" && popupErr && "code" in popupErr
             ? String((popupErr as { code?: string }).code)
@@ -150,6 +176,7 @@ function LoginPageContent() {
           code === "auth/popup-closed-by-user" ||
           code === "auth/operation-not-supported-in-this-environment"
         ) {
+          console.log("[Login] Falling back to Google redirect");
           await signInWithRedirect(auth, googleProvider);
           return;
         }
@@ -159,15 +186,24 @@ function LoginPageContent() {
       const u = auth.currentUser;
       if (u) {
         const token = await u.getIdToken();
-        await fetch("/api/auth/session", {
+        const sessionRes = await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken: token, remember: true }),
         });
+        if (!sessionRes.ok) {
+          const errText = await sessionRes.text();
+          console.error(
+            "[Login] Google session API error",
+            sessionRes.status,
+            errText,
+          );
+          throw new Error(`Session API error: ${sessionRes.status}`);
+        }
       }
       router.push(nextAfter || "/app/dashboard");
     } catch (e) {
-      console.error("[Auth] Google sign-in failed", e);
+      console.error("[Login] Google sign-in failed", e);
       setError("Google sign-in failed. Please try again.");
     } finally {
       setLoading(false);
