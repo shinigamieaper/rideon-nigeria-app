@@ -17,9 +17,11 @@ type AdminRole =
 export default function AdminLayoutClient({
   children,
   adminRole,
+  appExpired = false,
 }: {
   children: ReactNode;
   adminRole: AdminRole;
+  appExpired?: boolean;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -124,6 +126,21 @@ export default function AdminLayoutClient({
             </div>
           </div>
         </div>
+
+        {appExpired ? (
+          <div className="sticky top-14 xl:top-0 z-20 bg-amber-50/80 dark:bg-amber-950/30 backdrop-blur-2xl border-b border-amber-200/70 dark:border-amber-800/50">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                  Service disabled — please contact the developer.
+                </div>
+                <div className="text-xs text-amber-800/90 dark:text-amber-300/90">
+                  Customer/driver/partner access is disabled until renewed.
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {children}
       </div>

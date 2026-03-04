@@ -5,6 +5,20 @@ import { redirect } from "next/navigation";
 import { adminAuth, verifyRideOnSessionCookie } from "@/lib/firebaseAdmin";
 import AdminLayoutClient from "./AdminLayoutClient";
 
+function parseExpiryMs(value: string | undefined): number | null {
+  const raw = (value || "").trim();
+  if (!raw) return null;
+
+  if (/^\d+$/.test(raw)) {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return null;
+    return n > 1_000_000_000_000 ? n : n * 1000;
+  }
+
+  const ms = Date.parse(raw);
+  return Number.isFinite(ms) ? ms : null;
+}
+
 function withTimeout<T>(
   promise: Promise<T>,
   ms: number,
@@ -32,6 +46,9 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
+  const expiresAtMs = parseExpiryMs(process.env.APP_EXPIRES_AT);
+  const appExpired = expiresAtMs !== null && Date.now() >= expiresAtMs;
+
   const c = await cookies();
   const session = c.get("rideon_session")?.value || "";
   let decoded: any | null = null;
@@ -66,6 +83,13 @@ export default async function AdminLayout({
     redirect("/app");
   }
 
+  const emailVerified =
+    decoded?.email_verified === true ||
+    decoded?.claims?.email_verified === true;
+  if (!emailVerified) {
+    redirect(`/verify-email?next=${encodeURIComponent("/admin")}`);
+  }
+
   const adminRole =
     typeof decoded?.adminRole === "string"
       ? decoded.adminRole
@@ -74,7 +98,7 @@ export default async function AdminLayout({
         : "admin";
 
   return (
-    <AdminLayoutClient adminRole={adminRole as any}>
+    <AdminLayoutClient adminRole={adminRole as any} appExpired={appExpired}>
       {children}
     </AdminLayoutClient>
   );

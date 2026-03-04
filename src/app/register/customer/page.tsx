@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 import BlurText from "../../../../components/shared/BlurText";
 import RevealOnScroll from "../../../../components/shared/RevealOnScroll";
 
@@ -106,12 +109,21 @@ function CustomerRegisterPageContent() {
         }
       } catch {}
 
-      // 5) Redirect to intended destination (if provided), otherwise dashboard
-      if (nextAfter) {
-        router.push(nextAfter);
-      } else {
-        router.push("/app/dashboard");
-      }
+      // 5) Send email verification and redirect to verification screen
+      try {
+        const u = auth.currentUser;
+        if (u && !u.emailVerified) {
+          const next = nextAfter || "/app/dashboard";
+          const actionCodeSettings = {
+            url: `${window.location.origin}/auth/action?next=${encodeURIComponent(next)}`,
+            handleCodeInApp: true,
+          } as const;
+          await sendEmailVerification(u, actionCodeSettings);
+        }
+      } catch {}
+
+      const next = nextAfter || "/app/dashboard";
+      router.push(`/verify-email?next=${encodeURIComponent(next)}`);
     } catch (err: any) {
       const code = err?.code as string | undefined;
       if (code === "auth/email-already-in-use") {

@@ -3,6 +3,19 @@
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import BrandBanner from "../../components/shared/BrandBanner";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
+const EMAIL_VERIFY_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
+
+function getAccountAgeMs(
+  creationTime: string | null | undefined,
+): number | null {
+  if (!creationTime) return null;
+  const created = Date.parse(creationTime);
+  if (!Number.isFinite(created)) return null;
+  return Date.now() - created;
+}
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -47,6 +60,8 @@ interface BannerData {
 export default function BannerSwitcher() {
   const pathname = usePathname();
   const [banner, setBanner] = useState<BannerData | null>(null);
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [accountAgeMs, setAccountAgeMs] = useState<number | null>(null);
 
   // Determine which portal we're on (admin never shows banners)
   const portal = pathname?.startsWith("/admin")
@@ -62,19 +77,75 @@ export default function BannerSwitcher() {
             : "public";
 
   useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        setEmailVerified(null);
+        setAccountAgeMs(null);
+        return;
+      }
+
+      setEmailVerified(!!u.emailVerified);
+      setAccountAgeMs(getAccountAgeMs(u.metadata?.creationTime));
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
     if (!portal) {
       setBanner(null);
       return;
     }
 
+    if (portal !== "public" && emailVerified === false) {
+      const age = accountAgeMs;
+      if (age !== null && age >= EMAIL_VERIFY_GRACE_MS) {
+        (async () => {
+          try {
+            await fetch("/api/auth/session", { method: "DELETE" });
+          } catch {
+            // ignore
+          }
+          try {
+            await signOut(auth);
+          } catch {
+            // ignore
+          }
+          const next = pathname || "/app/dashboard";
+          if (typeof window !== "undefined") {
+            window.location.href = `/verify-email?next=${encodeURIComponent(next)}`;
+          }
+        })();
+        setBanner(null);
+        return;
+      }
+    }
+
     const fetchBanner = async () => {
       try {
-        const res = await fetchWithTimeout(
-          `/api/config/banner?portal=${portal}`,
-          { timeoutMs: 2500 },
-        );
+        const url =
+          portal !== "public" && emailVerified === false
+            ? `/api/config/banner?portal=${portal}&system=email_verification`
+            : `/api/config/banner?portal=${portal}`;
+        const res = await fetchWithTimeout(url, { timeoutMs: 2500 });
         if (res.ok) {
           const data = await res.json();
+          if (portal !== "public" && emailVerified === false) {
+            if (data?.show) {
+              setBanner(data);
+              return;
+            }
+            setBanner({
+              show: true,
+              title: "Verify your email",
+              message:
+                "Please verify your email address to keep your account active.",
+              ctaLabel: "Verify now",
+              ctaLink: "/verify-email",
+              dismissible: false,
+            });
+            return;
+          }
+
           setBanner(data);
         }
       } catch (err) {
@@ -84,7 +155,7 @@ export default function BannerSwitcher() {
     };
 
     fetchBanner();
-  }, [portal]);
+  }, [accountAgeMs, emailVerified, pathname, portal]);
 
   if (!portal || !banner?.show) return null;
 

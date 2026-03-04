@@ -14,6 +14,23 @@ import { auth, googleProvider } from "@/lib/firebase";
 import BlurText from "../../../components/shared/BlurText";
 import RevealOnScroll from "../../../components/shared/RevealOnScroll";
 
+const EMAIL_VERIFY_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
+
+function isAllowlistedNext(nextAfter: string | null): boolean {
+  const n = (nextAfter || "").trim();
+  if (!n) return false;
+  return n.startsWith("/join/partner");
+}
+
+function getAccountAgeMs(
+  creationTime: string | null | undefined,
+): number | null {
+  if (!creationTime) return null;
+  const created = Date.parse(creationTime);
+  if (!Number.isFinite(created)) return null;
+  return Date.now() - created;
+}
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,6 +49,14 @@ function LoginPageContent() {
       await signInWithEmailAndPassword(auth, email, password);
       const u = auth.currentUser;
       if (u) {
+        if (!u.emailVerified && !isAllowlistedNext(nextAfter)) {
+          const ageMs = getAccountAgeMs(u.metadata?.creationTime);
+          if (ageMs !== null && ageMs >= EMAIL_VERIFY_GRACE_MS) {
+            const next = nextAfter || "/app/dashboard";
+            router.replace(`/verify-email?next=${encodeURIComponent(next)}`);
+            return;
+          }
+        }
         const token = await u.getIdToken();
         await fetch("/api/auth/session", {
           method: "POST",

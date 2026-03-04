@@ -36,6 +36,8 @@ type BannerJson = {
   dismissForHours?: number;
 };
 
+type SystemMode = "email_verification";
+
 const CACHE_TTL_MS = 60_000;
 const CACHE_HEADERS = {
   "Cache-Control":
@@ -51,6 +53,54 @@ let firestoreOutageUntil = 0;
 
 function isFirestoreInOutage(): boolean {
   return Date.now() < firestoreOutageUntil;
+}
+
+async function pickSystemBanner(
+  portal: Portal,
+  system: SystemMode,
+): Promise<BannerJson | null> {
+  const now = new Date();
+
+  const snap = await withTimeout(
+    adminDb
+      .collection("brand_banners")
+      .where("status", "==", "active")
+      .where("portals", "array-contains", portal)
+      .orderBy("priority", "desc")
+      .limit(10)
+      .get(),
+    2_500,
+    "[banner] brand_banners system query",
+  );
+
+  if (snap.empty) return null;
+
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    const startAt = d.startAt?.toDate?.() as Date | undefined;
+    const endAt = d.endAt?.toDate?.() as Date | undefined;
+
+    if (startAt && now < startAt) continue;
+    if (endAt && now >= endAt) continue;
+
+    const ctaLink = typeof d.ctaLink === "string" ? d.ctaLink.trim() : "";
+    if (system === "email_verification") {
+      if (!ctaLink.startsWith("/verify-email")) continue;
+    }
+
+    return {
+      id: doc.id,
+      show: true,
+      title: d.title || "",
+      message: d.message || "",
+      ctaLabel: d.ctaLabel || "",
+      ctaLink,
+      dismissible: d.dismissible ?? true,
+      dismissForHours: d.dismissForHours ?? 24,
+    };
+  }
+
+  return null;
 }
 
 function markFirestoreOutage(ms: number) {
@@ -160,6 +210,9 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const portal = url.searchParams.get("portal") || "public";
+    const systemRaw = (url.searchParams.get("system") || "").trim();
+    const system: SystemMode | null =
+      systemRaw === "email_verification" ? "email_verification" : null;
 
     if (!VALID_PORTALS.includes(portal as Portal)) {
       return NextResponse.json(
@@ -169,6 +222,14 @@ export async function GET(req: Request) {
     }
 
     const normalizedPortal = portal as Portal;
+
+    if (system) {
+      const systemBanner = await pickSystemBanner(normalizedPortal, system);
+      return NextResponse.json(systemBanner || { show: false }, {
+        status: 200,
+        headers: CACHE_HEADERS,
+      });
+    }
 
     // Check memory cache
     if (memoryCache && Date.now() < memoryCache.expiresAt) {
