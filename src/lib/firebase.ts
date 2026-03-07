@@ -18,7 +18,7 @@ const firebaseConfig = {
   authDomain:
     process.env.NODE_ENV === "development"
       ? (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN as string)
-      : "rideon-nigeria-app-roan.vercel.app",
+      : "rideonnigeria.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID as string,
   messagingSenderId: process.env
