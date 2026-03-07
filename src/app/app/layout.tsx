@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { adminAuth, verifyRideOnSessionCookie } from "@/lib/firebaseAdmin";
 import RideOnFloatingDock from "@/components/app/RideOnFloatingDock";
 import CustomerOnboardingTour from "@/components/app/CustomerOnboardingTour";
+import type { NextRequest } from "next/server";
 
 function withTimeout<T>(
   promise: Promise<T>,
@@ -29,6 +30,8 @@ function withTimeout<T>(
 }
 
 export default async function Layout({ children }: { children: ReactNode }) {
+  const h = await headers();
+  const pathname = h.get("x-pathname") || "";
   const c = await cookies();
   const session = c.get("rideon_session")?.value || "";
   let decoded: any | null = null;
@@ -56,7 +59,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const isAdmin = decoded?.admin === true || decoded?.claims?.admin === true;
 
   if (isAdmin) {
-    redirect("/admin");
+    // Avoid redirect loop if already on /admin
+    if (!pathname.startsWith("/admin")) {
+      redirect("/admin");
+    }
   }
 
   if (role === "driver") {
