@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { createAuditLog } from "@/lib/auditLog";
 import { requireAdmin } from "@/lib/adminRbac";
+import { sendAdminInviteEmail } from "@/lib/adminInviteEmail";
 
 interface AdminUser {
   uid: string;
@@ -131,6 +132,21 @@ export async function POST(req: NextRequest) {
       details: `Added admin privileges to ${email} with role: ${role}`,
       metadata: { role },
     });
+
+    // Send admin invite email
+    try {
+      await sendAdminInviteEmail({
+        targetEmail: userRecord.email!,
+        targetName: userRecord.displayName || undefined,
+        inviterName: caller!.email || "Admin",
+        role,
+      });
+    } catch (e) {
+      console.error(
+        "[POST /api/admin/admins] Failed to send admin invite email",
+        e,
+      );
+    }
 
     return NextResponse.json(
       {
