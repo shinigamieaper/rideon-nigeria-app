@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/__/auth/:path*",
-        destination: "https://rideon-e06da.firebaseapp.com/__/auth/:path*",
+        destination: "https://rideonnigeria.com/__/auth/:path*",
       },
     ];
   },
