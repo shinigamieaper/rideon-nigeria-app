@@ -4,6 +4,18 @@ const nextConfig: NextConfig = {
   /* config options here */
   async rewrites() {
     return [
+      // Force canonical domain: redirect www to non-www
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "www.rideonnigeria.com",
+          },
+        ],
+        destination: "https://rideonnigeria.com/:path*",
+        permanent: true,
+      },
       {
         source: "/__/auth/:path*",
         destination: "https://rideonnigeria.com/__/auth/:path*",
