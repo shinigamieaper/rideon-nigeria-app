@@ -243,18 +243,8 @@ export function OnDemandDriverRegisterPage() {
   };
 
   const handleFileChange = (key: keyof FilesState, file: File | null) => {
-    // Update filename immediately
-    setFormData((prev) => ({
-      ...prev,
-      files: { ...prev.files, [key]: file },
-      fileNames: {
-        ...prev.fileNames,
-        [key]: file ? "Uploading… " + file.name : "No file selected.",
-      },
-    }));
-
-    // If cleared, also clear URL mapping
     if (!file) {
+      // Clear file and URL
       setFormData((prev) => {
         const updates: Partial<FormDataState> = {};
         if (key === "driversLicense") updates.driversLicenseUrl = "";
@@ -262,8 +252,55 @@ export function OnDemandDriverRegisterPage() {
         if (key === "lasdriCard") updates.lasdriCardUrl = "";
         return { ...prev, ...updates } as FormDataState;
       });
+      setFormData((prev) => ({
+        ...prev,
+        files: { ...prev.files, [key]: null },
+        fileNames: { ...prev.fileNames, [key]: "No file selected." },
+      }));
       return;
     }
+
+    // Client-side validation for immediate feedback
+    const MAX_MB = 10;
+    const MAX_BYTES = MAX_MB * 1024 * 1024;
+    const ALLOWED_TYPES = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/pdf",
+    ];
+
+    if (file.size > MAX_BYTES) {
+      setError(
+        `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())} is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${MAX_MB}MB per file.`,
+      );
+      setFormData((prev) => ({
+        ...prev,
+        fileNames: { ...prev.fileNames, [key]: "File too large" },
+      }));
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError(
+        `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())} must be a PDF, JPG, or PNG image.`,
+      );
+      setFormData((prev) => ({
+        ...prev,
+        fileNames: { ...prev.fileNames, [key]: "Invalid file type" },
+      }));
+      return;
+    }
+
+    // Update filename immediately
+    setFormData((prev) => ({
+      ...prev,
+      files: { ...prev.files, [key]: file },
+      fileNames: {
+        ...prev.fileNames,
+        [key]: "Uploading… " + file.name,
+      },
+    }));
 
     // Begin upload
     setDocUploading((s) => ({ ...s, [key]: true }));
