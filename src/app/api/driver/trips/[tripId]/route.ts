@@ -150,6 +150,40 @@ export async function GET(
         ? { ...customerInfoRaw, phoneNumber: undefined }
         : customerInfoRaw;
 
+    const fareNgn = Number(data?.fareNgn || data?.fare || 0) || 0;
+    const payoutNgn =
+      Number(data?.driverPayoutNgn || data?.driverPayout || 0) || 0;
+    const effectivePayoutNgn =
+      payoutNgn > 0 ? payoutNgn : Math.max(0, Math.round(fareNgn * 0.8));
+
+    let customerInfoResolved: any = customerInfo;
+    const customerIdRaw = String(data?.customerId || data?.uid || "").trim();
+    if (
+      (!customerInfoResolved || !customerInfoResolved?.name) &&
+      customerIdRaw
+    ) {
+      try {
+        const userSnap = await adminDb
+          .collection("users")
+          .doc(customerIdRaw)
+          .get();
+        if (userSnap.exists) {
+          const u = userSnap.data() as any;
+          const nm =
+            `${String(u?.firstName || "")} ${String(u?.lastName || "")}`.trim();
+          if (nm) {
+            customerInfoResolved = {
+              ...(customerInfoResolved || {}),
+              name: nm,
+            };
+            if (shouldMaskPhone) {
+              customerInfoResolved.phoneNumber = undefined;
+            }
+          }
+        }
+      } catch {}
+    }
+
     // Return driver-focused trip details
     const tripDetail = {
       id: bookingSnap.id,
@@ -166,8 +200,8 @@ export async function GET(
       pickupPinRequired,
       pickupPinVerifiedAt,
       customerId: data?.customerId || null,
-      customerInfo,
-      fareNgn: data?.fareNgn || data?.fare || 0, // Support both fareNgn (new) and fare (legacy)
+      customerInfo: customerInfoResolved,
+      fareNgn: effectivePayoutNgn,
       distanceKm: data?.distance || null,
       notes: data?.notes || data?.specialInstructions || "",
       // Rental-specific fields

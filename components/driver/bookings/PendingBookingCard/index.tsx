@@ -21,6 +21,7 @@ export interface PendingBooking {
   dropoffCoords?: [number, number];
   scheduledPickupTime: string;
   fareNgn: number;
+  payoutNgn?: number;
   distanceKm?: number | null;
   customerInfo?: { name?: string } | null;
   notes?: string;
@@ -81,7 +82,7 @@ export default function PendingBookingCard({
     style: "currency",
     currency: "NGN",
     maximumFractionDigits: 0,
-  }).format(booking.fareNgn || 0);
+  }).format((booking.payoutNgn ?? booking.fareNgn) || 0);
 
   // Build Google Maps navigation URL to pickup location
   const googleMapsUrl = booking.pickupCoords

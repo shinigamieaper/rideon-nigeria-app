@@ -12,6 +12,7 @@ const DEFAULT_CONFIG = {
   enabled: true,
   blockHours: [2, 4, 8] as number[],
   cityBlockRatesNgn: {} as Record<string, Record<string, number>>,
+  cityBlockDriverPayoutNgn: {} as Record<string, Record<string, number>>,
 };
 
 function nf(n: any): number | null {
@@ -94,6 +95,9 @@ export async function GET(req: NextRequest) {
     const cityBlockRatesNgn = normalizeCityBlockRates(
       (data as any)?.cityBlockRatesNgn,
     );
+    const cityBlockDriverPayoutNgn = normalizeCityBlockRates(
+      (data as any)?.cityBlockDriverPayoutNgn,
+    );
 
     return NextResponse.json(
       {
@@ -101,6 +105,7 @@ export async function GET(req: NextRequest) {
           enabled,
           blockHours,
           cityBlockRatesNgn,
+          cityBlockDriverPayoutNgn,
         },
         updatedAt:
           (data as any)?.updatedAt?.toDate?.()?.toISOString?.() || null,
@@ -136,11 +141,15 @@ export async function PUT(req: NextRequest) {
         : DEFAULT_CONFIG.enabled;
     const blockHours = normalizeBlockHours(body?.blockHours);
     const cityBlockRatesNgn = normalizeCityBlockRates(body?.cityBlockRatesNgn);
+    const cityBlockDriverPayoutNgn = normalizeCityBlockRates(
+      body?.cityBlockDriverPayoutNgn,
+    );
 
     const nextConfig = {
       enabled,
       blockHours,
       cityBlockRatesNgn,
+      cityBlockDriverPayoutNgn,
     };
 
     const toWrite = {

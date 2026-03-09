@@ -73,6 +73,7 @@ export async function POST(req: Request) {
     let amountKobo = 0;
 
     let computedFareNgn: number | null = null;
+    let computedDriverPayoutNgn: number | null = null;
     let pricingBreakdown: any = null;
     let normalizedDriveMyCarPickupCoords: [number, number] | null = null;
     if (isDriveMyCar) {
@@ -145,11 +146,35 @@ export async function POST(req: Request) {
       }
 
       computedFareNgn = Math.round(unitRateNgn);
+
+      const payoutRates = pricing?.cityBlockDriverPayoutNgn?.[city];
+      const configuredPayoutNgn = payoutRates
+        ? Number((payoutRates as any)[String(roundedHours)])
+        : 0;
+      const fallbackPayoutNgn = Math.round(computedFareNgn * 0.8);
+      computedDriverPayoutNgn = Math.max(
+        0,
+        Math.min(
+          computedFareNgn,
+          Math.round(
+            (Number.isFinite(configuredPayoutNgn) && configuredPayoutNgn > 0
+              ? configuredPayoutNgn
+              : fallbackPayoutNgn) || 0,
+          ),
+        ),
+      );
+      const platformFeeNgn = Math.max(
+        0,
+        Math.round(computedFareNgn - computedDriverPayoutNgn),
+      );
+
       pricingBreakdown = {
         service: "drive_my_car",
         city,
         blockHours: roundedHours,
         subtotalNgn: computedFareNgn,
+        driverPayoutNgn: computedDriverPayoutNgn,
+        platformFeeNgn,
         vat: {
           enabled: false,
           rateBps: 0,
@@ -438,6 +463,7 @@ export async function POST(req: Request) {
           pickupPin,
         },
         fareNgn: computedFareNgn,
+        driverPayoutNgn: computedDriverPayoutNgn,
         pricing: pricingBreakdown,
       };
     } else if (isRental) {

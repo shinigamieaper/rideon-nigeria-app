@@ -391,7 +391,7 @@ export default function DriverTripDetailClient({
               <div className="text-right">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1 justify-end">
                   <Banknote className="w-4 h-4" />
-                  <span>Payout</span>
+                  <span>Driver Earnings</span>
                 </div>
                 <motion.div
                   className="text-xl font-bold text-[#34A853]"

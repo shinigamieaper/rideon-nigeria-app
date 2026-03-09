@@ -41,6 +41,18 @@ interface DriverDetail {
   status: string;
   onlineStatus: boolean;
   experienceYears: number;
+  bankAccount?: {
+    accountNumber: string;
+    accountName: string;
+    bankName: string;
+    bankCode: string;
+  } | null;
+  references?: {
+    name: string;
+    email: string;
+    phone: string;
+    relationship: string;
+  }[];
   recruitmentProfilePending?: {
     status: string;
     rejectionReason: string | null;
@@ -751,6 +763,95 @@ export default function DriverDetailPage({ params }: PageProps) {
 
             {/* Second row: Vehicle & Documents */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-slate-500" />
+                    Bank Details
+                  </p>
+                </div>
+                {driver.bankAccount ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 dark:text-slate-200">
+                    <div className="rounded-xl bg-slate-50/80 dark:bg-slate-800/60 p-3">
+                      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Bank
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {driver.bankAccount.bankName || "—"}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-slate-50/80 dark:bg-slate-800/60 p-3">
+                      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Account Name
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {driver.bankAccount.accountName || "—"}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-slate-50/80 dark:bg-slate-800/60 p-3 sm:col-span-2">
+                      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Account Number
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100 font-mono">
+                        {driver.bankAccount.accountNumber || "—"}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    No bank account linked yet.
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Users className="h-4 w-4 text-slate-500" />
+                    References
+                  </p>
+                </div>
+                {Array.isArray(driver.references) &&
+                driver.references.length > 0 ? (
+                  <div className="space-y-3">
+                    {driver.references.map((r, idx) => (
+                      <div
+                        key={`${r.email || r.phone || r.name || idx}-${idx}`}
+                        className="rounded-xl bg-slate-50/80 dark:bg-slate-800/60 p-3"
+                      >
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {r.name || "—"}
+                        </div>
+                        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Relationship:
+                            </span>{" "}
+                            {r.relationship || "—"}
+                          </div>
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Phone:
+                            </span>{" "}
+                            {r.phone || "—"}
+                          </div>
+                          <div className="sm:col-span-2">
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Email:
+                            </span>{" "}
+                            {r.email || "—"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    No references submitted.
+                  </p>
+                )}
+              </div>
+
               {/* Documents */}
               <div className="lg:col-span-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6">
                 <div className="flex items-center justify-between mb-4">

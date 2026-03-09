@@ -5,6 +5,7 @@ export type OnDemandDriverPricingConfig = {
   enabled: boolean;
   blockHours: number[];
   cityBlockRatesNgn: Record<string, Record<string, number>>;
+  cityBlockDriverPayoutNgn: Record<string, Record<string, number>>;
 };
 
 const DOC_ID = "on_demand_driver_pricing";
@@ -13,6 +14,7 @@ const DEFAULT_CONFIG: OnDemandDriverPricingConfig = {
   enabled: true,
   blockHours: [2, 4, 8],
   cityBlockRatesNgn: {},
+  cityBlockDriverPayoutNgn: {},
 };
 
 function nf(n: any): number | null {
@@ -72,6 +74,9 @@ export async function getOnDemandDriverPricingConfig(): Promise<OnDemandDriverPr
       cityBlockRatesNgn: normalizeCityBlockRates(
         (data as any)?.cityBlockRatesNgn,
       ),
+      cityBlockDriverPayoutNgn: normalizeCityBlockRates(
+        (data as any)?.cityBlockDriverPayoutNgn,
+      ),
     };
   }
 
@@ -88,5 +93,6 @@ export async function getOnDemandDriverPricingConfig(): Promise<OnDemandDriverPr
       typeof legacy.driveMyCar.cityBlockRatesNgn === "object"
         ? legacy.driveMyCar.cityBlockRatesNgn
         : DEFAULT_CONFIG.cityBlockRatesNgn,
+    cityBlockDriverPayoutNgn: DEFAULT_CONFIG.cityBlockDriverPayoutNgn,
   };
 }

@@ -107,10 +107,19 @@ async function getDriverEarnings(uid: string) {
 
     const tripTransactions: Transaction[] = bookingsSnapshot.docs.map((doc) => {
       const data = doc.data();
+      const fareNgn = Number(data?.fareNgn || data?.fare || 0) || 0;
+      const payoutNgn =
+        Number(
+          data?.driverPayoutNgn ||
+            data?.driverPayout ||
+            data?.pricing?.driverPayoutNgn ||
+            0,
+        ) || 0;
       return {
         id: doc.id,
         type: "trip" as const,
-        amount: data.driverEarnings || data.fare * 0.8 || 0, // 80% of fare by default
+        amount:
+          payoutNgn > 0 ? payoutNgn : Math.max(0, Math.round(fareNgn * 0.8)),
         description: `Rental: ${data.pickupAddress?.substring(0, 30)}... → ${data.dropoffAddress?.substring(0, 30)}...`,
         date: toIso(data.completionTime),
         status: "completed" as const,

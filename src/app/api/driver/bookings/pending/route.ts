@@ -120,6 +120,31 @@ export async function GET(req: NextRequest) {
         if (!bookingSnap.exists) return null;
         const d = bookingSnap.data() as any;
 
+        const fareNgn = Number(d?.fareNgn || d?.fare || o?.fareNgn || 0) || 0;
+        const payoutNgn =
+          Number(d?.driverPayoutNgn || d?.driverPayout || 0) || 0;
+        const effectivePayoutNgn =
+          payoutNgn > 0 ? payoutNgn : Math.max(0, Math.round(fareNgn * 0.8));
+
+        let customerInfo = d?.customerInfo || null;
+        const customerId = String(d?.customerId || d?.uid || "").trim();
+        if ((!customerInfo || !customerInfo?.name) && customerId) {
+          try {
+            const userSnap = await adminDb
+              .collection("users")
+              .doc(customerId)
+              .get();
+            if (userSnap.exists) {
+              const u = userSnap.data() as any;
+              const name =
+                `${String(u?.firstName || "")} ${String(u?.lastName || "")}`.trim();
+              if (name) {
+                customerInfo = { ...(customerInfo || {}), name };
+              }
+            }
+          } catch {}
+        }
+
         const isDriveMyCar =
           String(d?.service || "") === "drive_my_car" || !!d?.driveMyCar;
         if (!isDriveMyCar) return null;
@@ -182,9 +207,9 @@ export async function GET(req: NextRequest) {
           pickupCoords,
           dropoffCoords,
           scheduledPickupTime: sched,
-          fareNgn: d?.fareNgn || d?.fare || o?.fareNgn || 0,
+          fareNgn: effectivePayoutNgn,
           distanceKm: d?.distance || null,
-          customerInfo: d?.customerInfo || null,
+          customerInfo,
           notes: d?.notes || d?.specialInstructions || "",
           assignedAt: toIso(d?.assignedAt),
           rentalUnit: d?.rentalUnit || undefined,

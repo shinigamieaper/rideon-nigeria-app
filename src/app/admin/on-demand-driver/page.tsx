@@ -16,6 +16,7 @@ type PricingConfig = {
   enabled: boolean;
   blockHours: number[];
   cityBlockRatesNgn: Record<string, Record<string, number>>;
+  cityBlockDriverPayoutNgn: Record<string, Record<string, number>>;
 };
 
 type ServiceCity = {
@@ -29,6 +30,7 @@ const DEFAULT_CONFIG: PricingConfig = {
   enabled: true,
   blockHours: [2, 4, 8],
   cityBlockRatesNgn: {},
+  cityBlockDriverPayoutNgn: {},
 };
 
 function normalizeHours(input: any): number[] {
@@ -102,6 +104,11 @@ export default function OnDemandDriverAdminPage() {
           typeof nextConfig.cityBlockRatesNgn === "object"
             ? nextConfig.cityBlockRatesNgn
             : {},
+        cityBlockDriverPayoutNgn:
+          nextConfig?.cityBlockDriverPayoutNgn &&
+          typeof nextConfig.cityBlockDriverPayoutNgn === "object"
+            ? nextConfig.cityBlockDriverPayoutNgn
+            : {},
       });
 
       setUpdatedAt(
@@ -168,6 +175,37 @@ export default function OnDemandDriverAdminPage() {
     });
   }, []);
 
+  const setDriverPayout = useCallback(
+    (city: string, hours: number, value: string) => {
+      setConfig((prev) => {
+        const next = { ...prev };
+        const currentCity =
+          next.cityBlockDriverPayoutNgn?.[city] &&
+          typeof next.cityBlockDriverPayoutNgn[city] === "object"
+            ? { ...next.cityBlockDriverPayoutNgn[city] }
+            : {};
+
+        const asNumber = Math.max(0, Math.round(Number(value)));
+        if (!Number.isFinite(Number(value)) || asNumber <= 0) {
+          delete currentCity[String(hours)];
+        } else {
+          currentCity[String(hours)] = asNumber;
+        }
+
+        const nextMap = { ...(next.cityBlockDriverPayoutNgn || {}) };
+        if (Object.keys(currentCity).length === 0) {
+          delete nextMap[city];
+        } else {
+          nextMap[city] = currentCity;
+        }
+
+        next.cityBlockDriverPayoutNgn = nextMap;
+        return next;
+      });
+    },
+    [],
+  );
+
   const handleAddDuration = useCallback(() => {
     const n = Math.round(Number(newDuration));
     if (!Number.isFinite(n) || n <= 0 || n > 24) return;
@@ -219,6 +257,7 @@ export default function OnDemandDriverAdminPage() {
           enabled: Boolean(config.enabled),
           blockHours: normalizeHours(config.blockHours),
           cityBlockRatesNgn: config.cityBlockRatesNgn || {},
+          cityBlockDriverPayoutNgn: config.cityBlockDriverPayoutNgn || {},
         }),
       });
 
@@ -449,24 +488,59 @@ export default function OnDemandDriverAdminPage() {
                         {sortedDurations.map((h) => {
                           const v =
                             config.cityBlockRatesNgn?.[cityName]?.[String(h)];
+                          const payout =
+                            config.cityBlockDriverPayoutNgn?.[cityName]?.[
+                              String(h)
+                            ];
                           return (
                             <td
                               key={h}
                               className="p-3 border-b border-slate-200/60 dark:border-slate-800/60"
                             >
-                              <input
-                                type="number"
-                                min={0}
-                                value={
-                                  typeof v === "number" && Number.isFinite(v)
-                                    ? v
-                                    : ""
-                                }
-                                onChange={(e) =>
-                                  setRate(cityName, h, e.target.value)
-                                }
-                                className="w-40 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                              />
+                              <div className="space-y-2">
+                                <div>
+                                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                    Customer
+                                  </div>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={
+                                      typeof v === "number" &&
+                                      Number.isFinite(v)
+                                        ? v
+                                        : ""
+                                    }
+                                    onChange={(e) =>
+                                      setRate(cityName, h, e.target.value)
+                                    }
+                                    className="w-40 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                  />
+                                </div>
+                                <div>
+                                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                    Driver
+                                  </div>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={
+                                      typeof payout === "number" &&
+                                      Number.isFinite(payout)
+                                        ? payout
+                                        : ""
+                                    }
+                                    onChange={(e) =>
+                                      setDriverPayout(
+                                        cityName,
+                                        h,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-40 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                  />
+                                </div>
+                              </div>
                             </td>
                           );
                         })}

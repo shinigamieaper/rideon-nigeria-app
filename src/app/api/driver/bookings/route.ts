@@ -57,6 +57,15 @@ export async function GET(req: Request) {
 
     const bookings = snap.docs.map((d) => {
       const v = d.data() as any;
+      const isDriveMyCar =
+        String(v?.service || "") === "drive_my_car" || !!v?.driveMyCar;
+      const fareNgn = Number(v.fareNgn ?? v.fare ?? 0) || 0;
+      const payoutNgn = Number(v.driverPayoutNgn ?? v.driverPayout ?? 0) || 0;
+      const effectivePayoutNgn = isDriveMyCar
+        ? payoutNgn > 0
+          ? payoutNgn
+          : Math.max(0, Math.round(fareNgn * 0.8))
+        : fareNgn;
       return {
         id: d.id,
         pickupAddress: v.pickupAddress,
@@ -68,7 +77,7 @@ export async function GET(req: Request) {
         rentalUnit: v.rentalUnit ?? null, // '4h' | 'day'
         city: v.city ?? null,
         blocks: v.blocks ?? null, // Number of rental units
-        fareNgn: v.fareNgn ?? v.fare ?? null,
+        fareNgn: effectivePayoutNgn,
         startDate: v.startDate ?? null,
         startTime: v.startTime ?? null,
         endDate: v.endDate ?? null,

@@ -72,17 +72,43 @@ export async function GET(req: NextRequest) {
           ? d.scheduledPickupTime.toDate().toISOString()
           : d?.scheduledPickupTime;
 
+        const fareNgn = Number(d?.fareNgn || d?.fare || 0) || 0;
+        const payoutNgn =
+          Number(d?.driverPayoutNgn || d?.driverPayout || 0) || 0;
+        const effectivePayoutNgn =
+          payoutNgn > 0 ? payoutNgn : Math.max(0, Math.round(fareNgn * 0.8));
+
+        const customerInfo = d?.customerInfo || null;
+        const customerId = String(d?.customerId || d?.uid || "").trim();
+
         return {
           id: doc.id,
           pickupAddress: d?.pickupAddress || "",
           dropoffAddress: d?.dropoffAddress || undefined,
           scheduledPickupTime: sched,
           status,
-          fareNgn: d?.fareNgn || d?.fare || 0,
-          customerInfo: d?.customerInfo || null,
+          fareNgn: effectivePayoutNgn,
+          customerInfo,
+          customerId,
         };
       })
       .filter(Boolean);
+
+    for (const t of trips as any[]) {
+      if (t?.customerInfo?.name) continue;
+      const cid = String(t?.customerId || "").trim();
+      if (!cid) continue;
+      try {
+        const userSnap = await adminDb.collection("users").doc(cid).get();
+        if (!userSnap.exists) continue;
+        const u = userSnap.data() as any;
+        const name =
+          `${String(u?.firstName || "")} ${String(u?.lastName || "")}`.trim();
+        if (name) {
+          t.customerInfo = { ...(t.customerInfo || {}), name };
+        }
+      } catch {}
+    }
 
     return NextResponse.json({ trips }, { status: 200 });
   } catch (error: any) {

@@ -52,17 +52,12 @@ export async function GET(req: NextRequest) {
         const driverDoc = await adminDb.collection("users").doc(driverId).get();
         const driverData = driverDoc.exists ? driverDoc.data() : null;
 
-        // Check for bank account in driver_bank_accounts collection
-        const bankSnapshot = await adminDb
+        const bankSnap = await adminDb
           .collection("driver_bank_accounts")
-          .where("driverId", "==", driverId)
-          .where("isDefault", "==", true)
-          .limit(1)
+          .doc(driverId)
           .get();
 
-        const bankData = bankSnapshot.empty
-          ? null
-          : bankSnapshot.docs[0].data();
+        const bankData = bankSnap.exists ? bankSnap.data() : null;
 
         driverPayouts[driverId] = {
           driverId,

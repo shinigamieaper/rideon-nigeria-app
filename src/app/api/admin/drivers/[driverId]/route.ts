@@ -103,6 +103,13 @@ export async function GET(
     let phoneNumber = "";
     let profileImageUrl = "";
 
+    let bankAccount: {
+      accountNumber: string;
+      accountName: string;
+      bankName: string;
+      bankCode: string;
+    } | null = null;
+
     try {
       const userDoc = await adminDb.collection("users").doc(driverId).get();
       if (userDoc.exists) {
@@ -112,6 +119,23 @@ export async function GET(
         email = userData?.email || "";
         phoneNumber = userData?.phoneNumber || "";
         profileImageUrl = userData?.profileImageUrl || "";
+      }
+    } catch {}
+
+    try {
+      const bankDoc = await adminDb
+        .collection("driver_bank_accounts")
+        .doc(driverId)
+        .get();
+      if (bankDoc.exists) {
+        const b = bankDoc.data() as any;
+        bankAccount = {
+          accountNumber:
+            typeof b?.accountNumber === "string" ? b.accountNumber : "",
+          accountName: typeof b?.accountName === "string" ? b.accountName : "",
+          bankName: typeof b?.bankName === "string" ? b.bankName : "",
+          bankCode: typeof b?.bankCode === "string" ? b.bankCode : "",
+        };
       }
     } catch {}
 
@@ -166,6 +190,22 @@ export async function GET(
       status: d.status || "pending_review",
       onlineStatus: d.onlineStatus || false,
       experienceYears: d.experienceYears || 0,
+      bankAccount,
+      references: Array.isArray((d as any).references)
+        ? (d as any).references
+            .map((r: any) => ({
+              name: typeof r?.name === "string" ? r.name : "",
+              email: typeof r?.email === "string" ? r.email : "",
+              phone: typeof r?.phone === "string" ? r.phone : "",
+              relationship:
+                typeof r?.relationship === "string" ? r.relationship : "",
+            }))
+            .filter((r: any) =>
+              [r.name, r.email, r.phone, r.relationship].some(
+                (v: any) => typeof v === "string" && v.trim().length > 0,
+              ),
+            )
+        : [],
       documents:
         d.documents && typeof d.documents === "object"
           ? Object.fromEntries(

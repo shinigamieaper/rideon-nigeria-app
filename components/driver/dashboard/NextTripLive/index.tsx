@@ -81,7 +81,13 @@ export default function NextTripLive({
             pickupCoords,
             dropoffCoords,
             scheduledPickupTime: sched,
-            fare: Number(d?.fareNgn || d?.fare || 0), // Support both fareNgn (new) and fare (legacy)
+            fare: Number(
+              d?.driverPayoutNgn ||
+                d?.driverPayout ||
+                d?.fareNgn ||
+                d?.fare ||
+                0,
+            ),
             // Rental-specific fields
             rentalUnit: d?.rentalUnit as "day" | "4h" | undefined,
             city: d?.city ? String(d.city) : undefined,

@@ -56,6 +56,16 @@ interface AvailableDriver {
   servedCities?: string[];
 }
 
+function resolveDriverPayoutNgn(booking: any): number {
+  const pricingPayout = Number(booking?.pricing?.driverPayoutNgn ?? 0);
+  if (Number.isFinite(pricingPayout) && pricingPayout > 0)
+    return Math.round(pricingPayout);
+  const payout = Number(booking?.driverPayoutNgn ?? booking?.driverPayout ?? 0);
+  if (Number.isFinite(payout) && payout > 0) return Math.round(payout);
+  const fare = Number(booking?.fareNgn ?? booking?.fare ?? 0);
+  return Number.isFinite(fare) && fare > 0 ? Math.round(fare * 0.8) : 0;
+}
+
 /**
  * Runs the driver assignment batch process.
  *
@@ -783,6 +793,7 @@ export async function syncDriveMyCarOffersForDriver(
           ? String(c.booking.dropoffAddress)
           : null,
         fareNgn: Number(c.booking?.fareNgn || c.booking?.fare || 0) || 0,
+        payoutNgn: resolveDriverPayoutNgn(c.booking),
         rejectionReason: null,
         respondedAt: null,
         respondedAtMs: null,
@@ -1093,13 +1104,14 @@ export async function publishDriveMyCarBookingOffers(
       toIso(booking?.scheduledPickupTime) || scheduled.toISOString();
 
     const batch = adminDb.batch();
-    const created: Array<{ driverId: string }> = [];
+    const created: Array<{ driverId: string; payoutNgn: number }> = [];
     for (const c of candidates) {
       if (created.length >= needed) break;
 
       const offerId = `${bookingId}_${c.driverId}`;
       const offerRef = adminDb.collection("booking_offers").doc(offerId);
       const exists = existingOfferByDriverId.has(c.driverId);
+      const payoutNgn = resolveDriverPayoutNgn(booking);
       const payload = {
         bookingId,
         driverId: c.driverId,
@@ -1114,6 +1126,7 @@ export async function publishDriveMyCarBookingOffers(
           ? String(booking.dropoffAddress)
           : null,
         fareNgn: Number(booking?.fareNgn || booking?.fare || 0) || 0,
+        payoutNgn,
         rejectionReason: null,
         respondedAt: null,
         respondedAtMs: null,
@@ -1133,7 +1146,7 @@ export async function publishDriveMyCarBookingOffers(
           { merge: false },
         );
       }
-      created.push({ driverId: c.driverId });
+      created.push({ driverId: c.driverId, payoutNgn });
     }
 
     if (created.length === 0)
@@ -1147,9 +1160,12 @@ export async function publishDriveMyCarBookingOffers(
         city,
         pickupAddress: String(booking?.pickupAddress || ""),
         scheduledTime: scheduledIso,
-        payout: Number(booking?.fareNgn || booking?.fare || 0) || undefined,
+        payout: o.payoutNgn || undefined,
       }).catch((e) =>
-        console.warn("[Offers] Failed to send driver offer notification:", e),
+        console.warn(
+          "[Assignment] Failed to send driver offer notification:",
+          e,
+        ),
       );
     }
 
