@@ -167,7 +167,7 @@ function CustomerRegisterPageContent() {
           <BlurText
             as="p"
             className="mt-2 text-slate-600 dark:text-slate-400"
-            text="Get started with premium chauffeur-driven car rentals."
+            text="Get started with chauffeur-driven rentals, Drive My Car, and hiring a full-time driver."
             animateBy="words"
             direction="top"
             delay={24}

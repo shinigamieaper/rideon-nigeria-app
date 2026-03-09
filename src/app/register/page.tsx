@@ -34,7 +34,7 @@ export default function RegisterPage() {
           <BlurText
             as="p"
             className="mt-4 text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto"
-            text="Choose your path to get started. Reserve a chauffeur-driven car, drive with us, or become a vehicle partner."
+            text="Choose your path to get started. Create a customer account, drive with us, or become a vehicle partner."
             animateBy="words"
             direction="top"
             delay={24}
@@ -54,7 +54,7 @@ export default function RegisterPage() {
               <h2 className="text-2xl font-semibold mt-6">
                 <BlurText
                   as="span"
-                  text="I Need a Chauffeur-Driven Car"
+                  text="I’m a Customer"
                   animateBy="words"
                   direction="top"
                   delay={100}
@@ -63,7 +63,7 @@ export default function RegisterPage() {
               <BlurText
                 as="p"
                 className="text-gray-600 dark:text-slate-400 mt-2 text-base"
-                text="Sign up as a customer to reserve premium chauffeur-driven cars for your day or multi-day journeys across Nigeria."
+                text="Create a customer account to book chauffeur-driven rentals, hire a driver to drive your car, or find a full-time driver."
                 animateBy="words"
                 direction="top"
                 delay={24}
@@ -71,7 +71,7 @@ export default function RegisterPage() {
               <div className="mt-6 text-sm font-medium text-blue-400 flex items-center gap-2">
                 <BlurText
                   as="span"
-                  text="Reserve a Chauffeur-Driven Car"
+                  text="Create Customer Account"
                   animateBy="words"
                   direction="top"
                   delay={60}
@@ -105,7 +105,7 @@ export default function RegisterPage() {
               <BlurText
                 as="p"
                 className="text-gray-600 dark:text-slate-400 mt-2 text-base"
-                text="Join our network of professional chauffeurs, accept pre-booked reservations and long-term contracts, and earn with predictable schedules."
+                text="Join our network of professional drivers, accept reservations and long-term contracts, and earn with predictable schedules."
                 animateBy="words"
                 direction="top"
                 delay={24}
