@@ -112,8 +112,45 @@ export default function DriverDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [docOpeningKey, setDocOpeningKey] = useState<string | null>(null);
   const [recentBookings, setRecentBookings] = useState<DriverBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+
+  const openDocument = async (key: string, rawUrl: string) => {
+    try {
+      setError(null);
+      setDocOpeningKey(key);
+
+      const user = auth.currentUser;
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const token = await user.getIdToken();
+
+      const base = String(rawUrl || "").split("?")[0];
+      if (base.startsWith("/api/files/")) {
+        const res = await fetch(`${base}?resolve=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j?.error || "Failed to open document");
+        const resolved = typeof j?.url === "string" ? j.url : "";
+        if (!resolved) throw new Error("Failed to open document");
+        window.open(resolved, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      window.open(rawUrl, "_blank", "noopener,noreferrer");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unable to open document.";
+      setError(msg);
+    } finally {
+      setDocOpeningKey(null);
+    }
+  };
 
   const fetchDriver = async () => {
     try {
@@ -762,14 +799,19 @@ export default function DriverDetailPage({ params }: PageProps) {
                           </span>
                         </div>
                         {url ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-blue-600 text-white hover:bg-blue-700"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void openDocument(doc.key, String(url))
+                            }
+                            disabled={docOpeningKey === doc.key}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                           >
+                            {docOpeningKey === doc.key ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : null}
                             View
-                          </a>
+                          </button>
                         ) : (
                           <span className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
