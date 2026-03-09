@@ -56,7 +56,32 @@ async function clearSessionCookie() {
 function VerifyEmailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = safeNextPath(searchParams.get("next"));
+  const continueUrl = searchParams.get("continueUrl");
+  const nextFromContinue = (() => {
+    if (!continueUrl) return null;
+    try {
+      const u = new URL(continueUrl, window.location.origin);
+      const n = u.searchParams.get("next");
+      return n ? n : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const next = safeNextPath(searchParams.get("next") || nextFromContinue);
+
+  const mode = searchParams.get("mode");
+  const oobCode = searchParams.get("oobCode");
+
+  React.useEffect(() => {
+    if (mode === "verifyEmail" && oobCode) {
+      const qs = new URLSearchParams();
+      qs.set("mode", "verifyEmail");
+      qs.set("oobCode", oobCode);
+      qs.set("next", next);
+      router.replace(`/auth/action?${qs.toString()}`);
+    }
+  }, [mode, next, oobCode, router]);
 
   const [user, setUser] = React.useState<User | null>(auth.currentUser);
   const [checking, setChecking] = React.useState(true);

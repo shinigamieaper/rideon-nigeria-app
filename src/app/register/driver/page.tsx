@@ -211,13 +211,59 @@ export function OnDemandDriverRegisterPage() {
     });
   };
 
+  const ensureUploadUser = async () => {
+    const email = String(formData.email || "")
+      .trim()
+      .toLowerCase();
+    const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    if (!emailOk) {
+      throw new Error("Please enter a valid email address first.");
+    }
+
+    let user = auth.currentUser;
+    if (user && user.email?.toLowerCase() === email) return user;
+
+    try {
+      const password = cryptoRandomString(16);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      user = cred.user;
+      try {
+        await sendPasswordResetEmail(auth, email);
+      } catch {
+        // ignore
+      }
+      return user;
+    } catch (e: unknown) {
+      const code =
+        typeof e === "object" && e && "code" in e
+          ? String((e as { code?: string }).code)
+          : undefined;
+
+      if (code === "auth/email-already-in-use") {
+        try {
+          await fetchSignInMethodsForEmail(auth, email);
+          await sendPasswordResetEmail(auth, email);
+        } catch {
+          // ignore
+        }
+        throw new Error(
+          "This email already has an account. Please sign in, then return to continue registration. (We sent a password reset link if needed.)",
+        );
+      }
+
+      if (code === "auth/invalid-email") {
+        throw new Error("Please enter a valid email address.");
+      }
+
+      throw e;
+    }
+  };
+
   const uploadToCloudinary = async (
     key: keyof FilesState,
     file: File,
   ): Promise<string> => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Unauthorized");
-
+    const user = await ensureUploadUser();
     const token = await user.getIdToken();
     const fd = new FormData();
     fd.append("key", String(key));
@@ -267,8 +313,14 @@ export function OnDemandDriverRegisterPage() {
       "image/jpeg",
       "image/jpg",
       "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
       "application/pdf",
+      "application/octet-stream",
     ];
+    const ALLOWED_EXTS = ["jpg", "jpeg", "png", "webp", "pdf", "heic", "heif"];
+    const ext = String(file.name.split(".").pop() || "").toLowerCase();
 
     if (file.size > MAX_BYTES) {
       setError(
@@ -281,9 +333,9 @@ export function OnDemandDriverRegisterPage() {
       return;
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!ALLOWED_TYPES.includes(file.type) && !ALLOWED_EXTS.includes(ext)) {
       setError(
-        `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())} must be a PDF, JPG, or PNG image.`,
+        `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())} must be a PDF or an image (JPG/PNG/WebP).`,
       );
       setFormData((prev) => ({
         ...prev,

@@ -25,10 +25,21 @@ export async function POST(req: Request) {
       : "";
 
     if (!token) {
-      throw new Error("Missing Authorization Bearer token.");
+      return NextResponse.json(
+        { error: "Unauthorized. Please sign in first." },
+        { status: 401 },
+      );
     }
 
-    const decoded = await adminAuth.verifyIdToken(token);
+    let decoded: any;
+    try {
+      decoded = await adminAuth.verifyIdToken(token);
+    } catch {
+      return NextResponse.json(
+        { error: "Unauthorized. Please sign in again." },
+        { status: 401 },
+      );
+    }
     const uid = decoded.uid;
 
     const driverSnap = await adminDb.collection("drivers").doc(uid).get();
@@ -250,9 +261,26 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Error in uploads/driver-docs:", error);
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "";
+
+    const lower = String(message || "").toLowerCase();
+    const status =
+      lower.includes("missing") || lower.includes("invalid") ? 400 : 500;
+
     return NextResponse.json(
-      { error: "Failed to upload documents." },
-      { status: 500 },
+      {
+        error:
+          message && status === 400
+            ? message
+            : "Failed to upload documents. Please try again.",
+      },
+      { status },
     );
   }
 }
