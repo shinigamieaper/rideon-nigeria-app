@@ -54,6 +54,10 @@ interface DriverPayout {
   driverId: string;
   driverName: string;
   driverEmail: string;
+  bankName: string;
+  bankCode: string;
+  accountName: string;
+  accountNumber: string;
   totalEarnings: number;
   paidAmount: number;
   pendingAmount: number;
@@ -71,6 +75,9 @@ interface PayoutHistory {
   method: string;
   paidByEmail: string;
   paidAt: string | null;
+  bankName: string;
+  accountName: string;
+  accountNumberLast4: string;
   notes: string;
 }
 
@@ -106,6 +113,9 @@ export default function FinancePage() {
     driverId: string;
     driverName: string;
     amount: number;
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,6 +126,13 @@ export default function FinancePage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const maskAccountNumber = (accountNumber: string) => {
+    const raw = String(accountNumber || "").trim();
+    if (!raw) return "—";
+    const last4 = raw.slice(-4);
+    return `****${last4}`;
   };
 
   const fetchStats = useCallback(async () => {
@@ -689,6 +706,12 @@ export default function FinancePage() {
                               <p className="text-xs text-slate-500 dark:text-slate-400">
                                 {payout.driverEmail}
                               </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {payout.bankName ? payout.bankName : "—"} •{" "}
+                                {payout.accountNumber
+                                  ? maskAccountNumber(payout.accountNumber)
+                                  : "—"}
+                              </p>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right text-sm text-slate-600 dark:text-slate-400">
@@ -722,6 +745,9 @@ export default function FinancePage() {
                                   driverId: payout.driverId,
                                   driverName: payout.driverName,
                                   amount: payout.pendingAmount,
+                                  bankName: payout.bankName,
+                                  accountName: payout.accountName,
+                                  accountNumber: payout.accountNumber,
                                 })
                               }
                               disabled={processingPayout === payout.driverId}
@@ -768,6 +794,9 @@ export default function FinancePage() {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
                         Driver
                       </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                        Bank
+                      </th>
                       <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
                         Amount
                       </th>
@@ -804,6 +833,12 @@ export default function FinancePage() {
                           <p className="font-medium text-slate-900 dark:text-white text-sm">
                             {entry.driverName}
                           </p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                          {entry.bankName ? entry.bankName : "—"}
+                          {entry.accountNumberLast4
+                            ? ` • ****${entry.accountNumberLast4}`
+                            : ""}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className="font-semibold text-green-600 dark:text-green-400 text-sm">
@@ -870,6 +905,25 @@ export default function FinancePage() {
                   </span>
                   <span className="font-bold text-green-600 dark:text-green-400">
                     {formatNaira(confirmModal.amount)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Bank
+                  </span>
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {confirmModal.bankName || "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Account
+                  </span>
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {confirmModal.accountName || "—"} •{" "}
+                    {confirmModal.accountNumber
+                      ? maskAccountNumber(confirmModal.accountNumber)
+                      : "—"}
                   </span>
                 </div>
               </div>

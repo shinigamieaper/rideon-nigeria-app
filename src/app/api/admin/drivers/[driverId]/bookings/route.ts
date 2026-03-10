@@ -38,6 +38,7 @@ export async function GET(
     snap.forEach((doc) => {
       const d = doc.data();
       const createdAt = d.createdAt?.toDate?.() || null;
+      const driverPayoutNgn = d.driverPayoutNgn || d.driverPayout || 0;
 
       bookings.push({
         id: doc.id,
@@ -45,6 +46,8 @@ export async function GET(
         dropoffAddress: d.dropoffAddress || "",
         status: d.status || "requested",
         fareNgn: d.fareNgn || 0,
+        driverPayoutNgn: Number(driverPayoutNgn) || 0,
+        driverPaid: d.driverPaid === true,
         scheduledPickupTime:
           d.scheduledPickupTime?.toDate?.()?.toISOString() || null,
         createdAt: createdAt?.toISOString() || null,

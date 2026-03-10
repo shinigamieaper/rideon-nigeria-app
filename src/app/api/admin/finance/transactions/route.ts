@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
   try {
     const { response } = await requireAdmin(req, [
       "super_admin",
+      "admin",
       "finance_admin",
     ]);
     if (response) return response;

@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const { response } = await requireAdmin(req, [
       "super_admin",
+      "admin",
       "finance_admin",
     ]);
     if (response) return response;
@@ -63,6 +64,9 @@ export async function GET(req: NextRequest) {
         method: data.method || "manual",
         paidByEmail: data.paidByEmail || "",
         paidAt: data.paidAt?.toDate?.()?.toISOString() || null,
+        bankName: data.bankName || "",
+        accountName: data.accountName || "",
+        accountNumberLast4: data.accountNumberLast4 || "",
         notes: data.notes || "",
       };
     });

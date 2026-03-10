@@ -107,6 +107,8 @@ interface DriverBooking {
   pickupAddress: string;
   dropoffAddress: string;
   fareNgn: number;
+  driverPayoutNgn: number;
+  driverPaid: boolean;
   scheduledPickupTime: string | null;
   createdAt: string | null;
   paymentStatus: string;
@@ -129,6 +131,20 @@ export default function DriverDetailPage({ params }: PageProps) {
   const [docOpeningKey, setDocOpeningKey] = useState<string | null>(null);
   const [recentBookings, setRecentBookings] = useState<DriverBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+
+  const [adminRole, setAdminRole] = useState<
+    | "super_admin"
+    | "admin"
+    | "ops_admin"
+    | "driver_admin"
+    | "product_admin"
+    | "finance_admin"
+  >("admin");
+  const [payoutModal, setPayoutModal] = useState<{
+    bookingId: string;
+    payoutAmount: number;
+  } | null>(null);
+  const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerTitle, setViewerTitle] = useState("");
@@ -272,6 +288,33 @@ export default function DriverDetailPage({ params }: PageProps) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
+        user
+          .getIdTokenResult()
+          .then((r) => {
+            const claims: any = r?.claims || {};
+            const role =
+              typeof claims.adminRole === "string"
+                ? claims.adminRole
+                : typeof claims.role === "string"
+                  ? claims.role
+                  : "admin";
+            const validRoles = [
+              "super_admin",
+              "admin",
+              "ops_admin",
+              "driver_admin",
+              "product_admin",
+              "finance_admin",
+            ] as const;
+            setAdminRole(
+              validRoles.includes(role as any)
+                ? (role as (typeof validRoles)[number])
+                : "admin",
+            );
+          })
+          .catch(() => {
+            setAdminRole("admin");
+          });
         fetchDriver();
         fetchBookings();
       } else {
@@ -389,6 +432,62 @@ export default function DriverDetailPage({ params }: PageProps) {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const maskAccountNumber = (accountNumber: string) => {
+    const raw = String(accountNumber || "").trim();
+    if (!raw) return "—";
+    const last4 = raw.slice(-4);
+    return `****${last4}`;
+  };
+
+  const canPayDriver =
+    adminRole === "super_admin" ||
+    adminRole === "admin" ||
+    adminRole === "finance_admin";
+
+  const openPayoutModal = (booking: DriverBooking) => {
+    setError(null);
+    setPayoutModal({
+      bookingId: booking.id,
+      payoutAmount: Number(booking.driverPayoutNgn) || 0,
+    });
+  };
+
+  const handleMarkTripPaid = async (bookingId: string) => {
+    try {
+      if (!driver) return;
+      setError(null);
+      setPayingBookingId(bookingId);
+
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/finance/payouts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ driverId: driver.id, bookingIds: [bookingId] }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Failed to mark trip as paid");
+      }
+
+      setPayoutModal(null);
+      await fetchDriver();
+      await fetchBookings();
+    } catch (e: unknown) {
+      const msg =
+        e instanceof Error ? e.message : "Failed to mark trip as paid";
+      setError(msg);
+    } finally {
+      setPayingBookingId(null);
+    }
   };
 
   const fullName = driver
@@ -1020,6 +1119,33 @@ export default function DriverDetailPage({ params }: PageProps) {
                         <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {booking.status.replace(/_/g, " ")}
                         </span>
+                        {booking.status === "completed" ? (
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                              booking.driverPaid
+                                ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300"
+                                : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+                            }`}
+                          >
+                            {booking.driverPaid ? "Paid" : "Unpaid"}
+                          </span>
+                        ) : null}
+
+                        {canPayDriver &&
+                        booking.status === "completed" &&
+                        !booking.driverPaid ? (
+                          <button
+                            type="button"
+                            onClick={() => openPayoutModal(booking)}
+                            disabled={payingBookingId === booking.id}
+                            className="mt-1 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-60"
+                          >
+                            {payingBookingId === booking.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : null}
+                            Pay now
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   ))}
@@ -1029,6 +1155,85 @@ export default function DriverDetailPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={Boolean(payoutModal)}
+        onClose={() => setPayoutModal(null)}
+        title="Confirm Driver Payment"
+        className="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Confirm only after you’ve sent the payment to the driver. This
+              will mark this trip as paid.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-slate-50/80 dark:bg-slate-800/60 p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Amount
+              </span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                {formatNaira(payoutModal?.payoutAmount || 0)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Bank
+              </span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                {driver?.bankAccount?.bankName || "—"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Account
+              </span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                {driver?.bankAccount?.accountName || "—"} •{" "}
+                {driver?.bankAccount?.accountNumber
+                  ? maskAccountNumber(driver.bankAccount.accountNumber)
+                  : "—"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setPayoutModal(null)}
+              disabled={Boolean(payingBookingId)}
+              className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                payoutModal
+                  ? handleMarkTripPaid(payoutModal.bookingId)
+                  : undefined
+              }
+              disabled={
+                !payoutModal ||
+                Boolean(payingBookingId) ||
+                payoutModal.payoutAmount <= 0
+              }
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl transition-all disabled:opacity-50"
+            >
+              {payingBookingId === payoutModal?.bookingId ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle className="h-4 w-4" />
+              )}
+              Mark Paid
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={viewerOpen}

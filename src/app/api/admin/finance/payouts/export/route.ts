@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   try {
     const { caller, response } = await requireAdmin(req, [
       "super_admin",
+      "admin",
       "finance_admin",
     ]);
     if (response) return response;

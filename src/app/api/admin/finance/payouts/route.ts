@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
   try {
     const { caller, response } = await requireAdmin(req, [
       "super_admin",
+      "admin",
       "finance_admin",
     ]);
     if (response) return response;
@@ -34,6 +35,10 @@ export async function GET(req: NextRequest) {
         driverId: string;
         driverName: string;
         driverEmail: string;
+        bankName: string;
+        bankCode: string;
+        accountName: string;
+        accountNumber: string;
         totalEarnings: number;
         paidAmount: number;
         pendingAmount: number;
@@ -61,6 +66,27 @@ export async function GET(req: NextRequest) {
         const driverDoc = await adminDb.collection("users").doc(driverId).get();
         const driverData = driverDoc.exists ? driverDoc.data() : null;
 
+        // Fetch bank info
+        let bankName = "";
+        let bankCode = "";
+        let accountName = "";
+        let accountNumber = "";
+        try {
+          const bankDoc = await adminDb
+            .collection("driver_bank_accounts")
+            .doc(driverId)
+            .get();
+          if (bankDoc.exists) {
+            const b = bankDoc.data() as any;
+            bankName = typeof b?.bankName === "string" ? b.bankName : "";
+            bankCode = typeof b?.bankCode === "string" ? b.bankCode : "";
+            accountName =
+              typeof b?.accountName === "string" ? b.accountName : "";
+            accountNumber =
+              typeof b?.accountNumber === "string" ? b.accountNumber : "";
+          }
+        } catch {}
+
         driverPayouts[driverId] = {
           driverId,
           driverName: driverData
@@ -68,6 +94,10 @@ export async function GET(req: NextRequest) {
               "Unknown Driver"
             : "Unknown Driver",
           driverEmail: driverData?.email || "",
+          bankName,
+          bankCode,
+          accountName,
+          accountNumber,
           totalEarnings: 0,
           paidAmount: 0,
           pendingAmount: 0,
@@ -136,6 +166,7 @@ export async function POST(req: NextRequest) {
   try {
     const { caller, response } = await requireAdmin(req, [
       "super_admin",
+      "admin",
       "finance_admin",
     ]);
     if (response) return response;
@@ -188,20 +219,53 @@ export async function POST(req: NextRequest) {
     let totalPaid = 0;
     const batch = adminDb.batch();
 
+    // Snapshot bank details for audit/history
+    let bankName = "";
+    let bankCode = "";
+    let accountName = "";
+    let accountNumberLast4 = "";
+    try {
+      const bankDoc = await adminDb
+        .collection("driver_bank_accounts")
+        .doc(driverId)
+        .get();
+      if (bankDoc.exists) {
+        const b = bankDoc.data() as any;
+        bankName = typeof b?.bankName === "string" ? b.bankName : "";
+        bankCode = typeof b?.bankCode === "string" ? b.bankCode : "";
+        accountName = typeof b?.accountName === "string" ? b.accountName : "";
+        const acct =
+          typeof b?.accountNumber === "string" ? b.accountNumber : "";
+        accountNumberLast4 = acct ? String(acct).slice(-4) : "";
+      }
+    } catch {}
+
+    const updatedBookingIds: string[] = [];
+
     for (const bookingId of bookingsToUpdate) {
       const bookingRef = adminDb.collection("bookings").doc(bookingId);
       const bookingDoc = await bookingRef.get();
 
-      if (bookingDoc.exists) {
-        const data = bookingDoc.data()!;
-        totalPaid += data.driverPayoutNgn || data.driverPayout || 0;
+      if (!bookingDoc.exists) continue;
 
-        batch.update(bookingRef, {
-          driverPaid: true,
-          driverPaidAt: FieldValue.serverTimestamp(),
-          driverPaidBy: caller!.uid,
-        });
-      }
+      const data = bookingDoc.data()!;
+      if (data.driverPaid === true) continue;
+
+      updatedBookingIds.push(bookingId);
+      totalPaid += data.driverPayoutNgn || data.driverPayout || 0;
+
+      batch.update(bookingRef, {
+        driverPaid: true,
+        driverPaidAt: FieldValue.serverTimestamp(),
+        driverPaidBy: caller!.uid,
+      });
+    }
+
+    if (updatedBookingIds.length === 0) {
+      return NextResponse.json(
+        { error: "All specified bookings are already marked as paid" },
+        { status: 400 },
+      );
     }
 
     await batch.commit();
@@ -210,13 +274,17 @@ export async function POST(req: NextRequest) {
     await adminDb.collection("driver_payouts").add({
       driverId,
       amount: totalPaid,
-      bookingIds: bookingsToUpdate,
-      bookingCount: bookingsToUpdate.length,
+      bookingIds: updatedBookingIds,
+      bookingCount: updatedBookingIds.length,
       paidBy: caller!.uid,
       paidByEmail: caller!.email,
       paidAt: FieldValue.serverTimestamp(),
       method: "manual",
-      notes: `Marked ${bookingsToUpdate.length} booking(s) as paid`,
+      bankName,
+      bankCode,
+      accountName,
+      accountNumberLast4,
+      notes: `Marked ${updatedBookingIds.length} booking(s) as paid`,
     });
 
     await createAuditLog({
@@ -225,10 +293,10 @@ export async function POST(req: NextRequest) {
       actorEmail: caller!.email || "admin",
       targetId: driverId,
       targetType: "driver",
-      details: `Marked ${bookingsToUpdate.length} booking(s) as paid for driver ${driverId}`,
+      details: `Marked ${updatedBookingIds.length} booking(s) as paid for driver ${driverId}`,
       metadata: {
         driverId,
-        bookingIds: bookingsToUpdate,
+        bookingIds: updatedBookingIds,
         totalPaid,
       },
     });
@@ -236,7 +304,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        paidCount: bookingsToUpdate.length,
+        paidCount: updatedBookingIds.length,
         totalPaid,
       },
       { status: 200 },
