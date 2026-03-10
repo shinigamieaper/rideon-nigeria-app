@@ -96,14 +96,34 @@ export default function NewBookingsPage() {
   );
 
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, (u) => {
+      if (cancelled) return;
       if (!u) {
-        router.replace("/login");
-      } else if (accessGranted) {
-        fetchBookings("initial");
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace("/login?next=/driver/bookings/new");
+          }
+        }, 1500);
+      } else {
+        if (redirectTimer) {
+          clearTimeout(redirectTimer);
+          redirectTimer = null;
+        }
+        if (accessGranted) {
+          fetchBookings("initial");
+        }
       }
     });
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [fetchBookings, router, accessGranted]);
 
   // Auto-refresh every 30 seconds

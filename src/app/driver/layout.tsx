@@ -6,7 +6,7 @@ import type { FloatingDockProps } from "@/components/ui/floating-dock";
 import { Home, CalendarClock, MessageSquare, Wallet, User } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { DriverOnboardingTour } from "@/components";
 
 async function getIdTokenWithTimeout(
@@ -61,13 +61,31 @@ export default function DriverLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [sessionReady, setSessionReady] = React.useState(false);
 
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (cancelled) return;
       if (!user) {
-        setSessionReady(true); // Not logged in, but "ready" to show content
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace(
+              `/login?next=${encodeURIComponent(pathname || "/driver")}`,
+            );
+          }
+        }, 1500);
         return;
+      }
+
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
       }
       try {
         let token = await getIdTokenWithTimeout(user, { timeoutMs: 2500 });
@@ -125,8 +143,12 @@ export default function DriverLayout({
         setSessionReady(true); // Allow rendering even if fetch failed
       }
     });
-    return () => unsub();
-  }, []);
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [router, pathname]);
 
   const items = React.useMemo(() => {
     const nav: FloatingDockProps["items"] = [

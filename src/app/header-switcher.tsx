@@ -144,6 +144,7 @@ export default function HeaderSwitcher() {
     let cancelled = false;
     let refreshInterval: NodeJS.Timeout | null = null;
     let lastRefreshTime = Date.now();
+    let hasSeenUser = false;
 
     // Refresh session when user returns to tab after being away
     const handleVisibilityChange = async () => {
@@ -188,6 +189,9 @@ export default function HeaderSwitcher() {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (cancelled) return;
       if (!u) {
+        if (!hasSeenUser) {
+          return;
+        }
         // Clear any existing refresh interval
         if (refreshInterval) clearInterval(refreshInterval);
         refreshInterval = null;
@@ -204,6 +208,8 @@ export default function HeaderSwitcher() {
         }, 1000);
         return;
       }
+
+      hasSeenUser = true;
       try {
         // Prime header quickly from auth info before network
         const primed = initialsFrom(undefined, undefined, u.email || "");

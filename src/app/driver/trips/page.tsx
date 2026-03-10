@@ -104,14 +104,33 @@ export default function DriverTripsPage() {
   }, []);
 
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, (u) => {
+      if (cancelled) return;
       if (!u) {
-        router.replace("/login");
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace("/login?next=/driver/trips");
+          }
+        }, 1500);
       } else {
+        if (redirectTimer) {
+          clearTimeout(redirectTimer);
+          redirectTimer = null;
+        }
         fetchTrips();
       }
     });
-    return () => unsub();
+
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [fetchTrips, router]);
 
   if (!accessGranted || loading) {

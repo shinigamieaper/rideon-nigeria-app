@@ -20,10 +20,25 @@ export default function DriverConversationPage({ params }: PageProps) {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (cancelled) return;
       if (!user) {
-        router.replace("/login?next=/driver/messages");
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace("/login?next=/driver/messages");
+          }
+        }, 1500);
         return;
+      }
+
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
       }
 
       // Fetch conversation details to get participant name
@@ -51,7 +66,11 @@ export default function DriverConversationPage({ params }: PageProps) {
       }
     });
 
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [conversationId, router]);
 
   if (loading) {

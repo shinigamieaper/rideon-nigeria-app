@@ -200,7 +200,13 @@ export async function POST(req: NextRequest) {
         .filter((doc) => !doc.data().driverPaid)
         .map((doc) => doc.id);
     } else if (bookingIds && bookingIds.length > 0) {
-      bookingsToUpdate = bookingIds;
+      bookingsToUpdate = Array.from(
+        new Set(
+          bookingIds
+            .map((b) => (typeof b === "string" ? b.trim() : ""))
+            .filter(Boolean),
+        ),
+      );
     } else {
       return NextResponse.json(
         { error: "No bookings specified" },
@@ -241,14 +247,22 @@ export async function POST(req: NextRequest) {
     } catch {}
 
     const updatedBookingIds: string[] = [];
+    const invalidBookingIds: string[] = [];
 
     for (const bookingId of bookingsToUpdate) {
       const bookingRef = adminDb.collection("bookings").doc(bookingId);
       const bookingDoc = await bookingRef.get();
 
-      if (!bookingDoc.exists) continue;
+      if (!bookingDoc.exists) {
+        invalidBookingIds.push(bookingId);
+        continue;
+      }
 
       const data = bookingDoc.data()!;
+      if (data.driverId !== driverId || data.status !== "completed") {
+        invalidBookingIds.push(bookingId);
+        continue;
+      }
       if (data.driverPaid === true) continue;
 
       updatedBookingIds.push(bookingId);
@@ -261,6 +275,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (invalidBookingIds.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "One or more bookings are not eligible for payout (must belong to driver and be completed).",
+          invalidBookingIds,
+        },
+        { status: 400 },
+      );
+    }
+
     if (updatedBookingIds.length === 0) {
       return NextResponse.json(
         { error: "All specified bookings are already marked as paid" },
@@ -268,10 +293,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await batch.commit();
-
-    // Record payout in driver_payouts collection for history
-    await adminDb.collection("driver_payouts").add({
+    const payoutRef = adminDb.collection("driver_payouts").doc();
+    batch.set(payoutRef, {
       driverId,
       amount: totalPaid,
       bookingIds: updatedBookingIds,
@@ -287,7 +310,8 @@ export async function POST(req: NextRequest) {
       notes: `Marked ${updatedBookingIds.length} booking(s) as paid`,
     });
 
-    await createAuditLog({
+    const auditRef = adminDb.collection("audit_logs").doc();
+    batch.set(auditRef, {
       actionType: "finance_payout_marked_paid",
       actorId: caller!.uid,
       actorEmail: caller!.email || "admin",
@@ -298,14 +322,23 @@ export async function POST(req: NextRequest) {
         driverId,
         bookingIds: updatedBookingIds,
         totalPaid,
+        bankName,
+        bankCode,
+        accountName,
+        accountNumberLast4,
+        payoutId: payoutRef.id,
       },
+      createdAt: FieldValue.serverTimestamp(),
     });
+
+    await batch.commit();
 
     return NextResponse.json(
       {
         success: true,
         paidCount: updatedBookingIds.length,
         totalPaid,
+        payoutId: payoutRef.id,
       },
       { status: 200 },
     );

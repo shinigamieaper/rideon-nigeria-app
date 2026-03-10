@@ -100,13 +100,28 @@ export default function FullTimeDriverLayout({
   }, []);
 
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (cancelled) return;
+
       if (!user) {
-        setSessionReady(true);
-        router.replace(
-          `/login?next=${encodeURIComponent(pathname || "/full-time-driver")}`,
-        );
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace(
+              `/login?next=${encodeURIComponent(pathname || "/full-time-driver")}`,
+            );
+          }
+        }, 1500);
         return;
+      }
+
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
       }
 
       try {
@@ -147,7 +162,11 @@ export default function FullTimeDriverLayout({
       }
     });
 
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [router, pathname]);
 
   if (!sessionReady) {

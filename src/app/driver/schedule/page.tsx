@@ -92,15 +92,35 @@ export default function DriverSchedulePage() {
 
   // Access control: Verify driver is authenticated (placement track deprecated)
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (cancelled) return;
       if (!user) {
-        router.replace("/login?next=/driver/schedule");
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace("/login?next=/driver/schedule");
+          }
+        }, 1500);
         return;
       }
+
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
+      }
+
       // All drivers can access schedule - placement track deprecated
       setAccessGranted(true);
     });
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [router]);
   const weekStart = React.useMemo(
     () => startOfWeekMonday(currentDate),

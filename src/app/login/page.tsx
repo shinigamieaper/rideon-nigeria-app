@@ -11,6 +11,7 @@ import {
   signInWithRedirect,
   getRedirectResult,
   fetchSignInMethodsForEmail,
+  onAuthStateChanged,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import BlurText from "../../../components/shared/BlurText";
@@ -37,10 +38,46 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextAfter = searchParams.get("next");
+  const nextSafe = isAllowlistedNext(nextAfter)
+    ? (nextAfter as string)
+    : "/app/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let attempted = false;
+
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (cancelled || attempted) return;
+      if (!u) return;
+
+      attempted = true;
+      try {
+        setError(null);
+        setLoading(true);
+        const token = await u.getIdToken();
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: token, remember: true }),
+        });
+        router.replace(nextSafe);
+      } catch {
+        // If restore fails, fall back to showing the login form
+        attempted = false;
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [nextAfter, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,7 +108,7 @@ function LoginPageContent() {
           );
           throw new Error(`Session API error: ${sessionRes.status}`);
         }
-        router.replace(nextAfter || "/app/dashboard");
+        router.replace(nextSafe);
       } catch (e) {
         console.error("[Login] Google redirect result failed", e);
         if (!cancelled) {
@@ -100,7 +137,7 @@ function LoginPageContent() {
         if (!u.emailVerified && !isAllowlistedNext(nextAfter)) {
           const ageMs = getAccountAgeMs(u.metadata?.creationTime);
           if (ageMs !== null && ageMs >= EMAIL_VERIFY_GRACE_MS) {
-            const next = nextAfter || "/app/dashboard";
+            const next = nextSafe;
             router.replace(`/verify-email?next=${encodeURIComponent(next)}`);
             return;
           }
@@ -121,7 +158,7 @@ function LoginPageContent() {
           throw new Error(`Session API error: ${sessionRes.status}`);
         }
       }
-      router.push(nextAfter || "/app/dashboard");
+      router.push(nextSafe);
     } catch (err: unknown) {
       console.error("[Login] onSubmit error", err);
       // Show friendly message
@@ -135,9 +172,7 @@ function LoginPageContent() {
         message = "Incorrect email or password.";
       if (code === "auth/user-not-found") {
         message = "No account found for this email.";
-        router.push(
-          `/register/customer?next=${encodeURIComponent(nextAfter || "/app/catalog")}`,
-        );
+        router.push(`/register/customer?next=${encodeURIComponent(nextSafe)}`);
         return;
       }
       if (code === "auth/too-many-requests")
@@ -201,7 +236,7 @@ function LoginPageContent() {
           throw new Error(`Session API error: ${sessionRes.status}`);
         }
       }
-      router.push(nextAfter || "/app/dashboard");
+      router.push(nextSafe);
     } catch (e) {
       console.error("[Login] Google sign-in failed", e);
       setError("Google sign-in failed. Please try again.");

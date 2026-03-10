@@ -43,10 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing idToken." }, { status: 400 });
     }
 
-    // Firebase session cookies are backed by ID tokens which expire after 1 hour
-    // Keep session cookies under 1 hour to avoid premature expiry
-    // Client-side will refresh automatically every 50 minutes
-    const expiresIn = 55 * 60 * 1000; // 55 minutes
+    const expiresIn = remember ? 7 * 24 * 60 * 60 * 1000 : 55 * 60 * 1000;
 
     let sessionCookie = "";
     let lastError: any = null;
@@ -75,13 +72,20 @@ export async function POST(req: Request) {
       );
     }
 
+    const isIdTokenCookie = sessionCookie.startsWith(
+      RIDEON_ID_TOKEN_COOKIE_PREFIX,
+    );
+    const maxAgeSeconds = Math.floor(
+      (isIdTokenCookie ? 55 * 60 * 1000 : expiresIn) / 1000,
+    );
+
     const res = NextResponse.json({ success: true }, { status: 200 });
     res.cookies.set(SESSION_COOKIE_NAME, sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== "development",
       sameSite: "lax",
       path: "/",
-      maxAge: Math.floor(expiresIn / 1000),
+      maxAge: maxAgeSeconds,
     });
     return res;
   } catch (error: any) {

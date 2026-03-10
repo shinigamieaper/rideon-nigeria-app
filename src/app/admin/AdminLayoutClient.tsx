@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import { AdminOnboardingTour, AdminSidebar } from "@/components";
 import { onAuthStateChanged } from "firebase/auth";
@@ -26,12 +26,16 @@ export default function AdminLayoutClient({
   appExpired?: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [isXlUp, setIsXlUp] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     let refreshInterval: ReturnType<typeof setInterval> | null = null;
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
 
     const getIdTokenWithTimeout = async (
       user: { getIdToken: (forceRefresh?: boolean) => Promise<string> },
@@ -61,10 +65,28 @@ export default function AdminLayoutClient({
     };
 
     const unsub = onAuthStateChanged(auth, async (u) => {
+      if (cancelled) return;
       if (!u) {
+        setAuthReady(false);
         if (refreshInterval) clearInterval(refreshInterval);
         refreshInterval = null;
+
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace(
+              `/login?next=${encodeURIComponent(pathname || "/admin")}`,
+            );
+          }
+        }, 1500);
         return;
+      }
+
+      setAuthReady(true);
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
       }
       try {
         await refreshSession(u);
@@ -83,10 +105,12 @@ export default function AdminLayoutClient({
     });
 
     return () => {
+      cancelled = true;
       unsub();
       if (refreshInterval) clearInterval(refreshInterval);
+      if (redirectTimer) clearTimeout(redirectTimer);
     };
-  }, []);
+  }, [router, pathname]);
 
   useEffect(() => {
     try {
@@ -134,6 +158,26 @@ export default function AdminLayoutClient({
       document.body.style.overflow = previous;
     };
   }, [mobileOpen]);
+
+  if (!authReady) {
+    return (
+      <div className="relative min-h-dvh bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div
+            className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            role="status"
+          >
+            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+              Loading...
+            </span>
+          </div>
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+            Preparing your admin portal...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-dvh bg-background text-foreground overflow-x-hidden">

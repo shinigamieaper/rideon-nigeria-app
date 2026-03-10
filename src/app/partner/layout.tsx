@@ -100,11 +100,28 @@ export default function PartnerLayout({
   }, [mobileSidebarOpen]);
 
   React.useEffect(() => {
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (cancelled) return;
+
       if (!user) {
-        setSessionReady(true);
-        router.replace("/login");
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (cancelled) return;
+          if (!auth.currentUser) {
+            router.replace(
+              `/login?next=${encodeURIComponent(pathname || "/partner")}`,
+            );
+          }
+        }, 1500);
         return;
+      }
+
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
       }
 
       try {
@@ -163,8 +180,12 @@ export default function PartnerLayout({
       }
     });
 
-    return () => unsub();
-  }, [router]);
+    return () => {
+      cancelled = true;
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [router, pathname]);
 
   if (!sessionReady) {
     return (
