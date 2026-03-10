@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { AdminOnboardingTour, AdminSidebar } from "@/components";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 type AdminRole =
   | "super_admin"
@@ -27,6 +29,64 @@ export default function AdminLayoutClient({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [isXlUp, setIsXlUp] = useState(false);
+
+  useEffect(() => {
+    let refreshInterval: ReturnType<typeof setInterval> | null = null;
+
+    const getIdTokenWithTimeout = async (
+      user: { getIdToken: (forceRefresh?: boolean) => Promise<string> },
+      timeoutMs = 2500,
+    ) => {
+      return await Promise.race([
+        user.getIdToken(),
+        new Promise<string>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(new Error(`getIdToken timed out after ${timeoutMs}ms`)),
+            timeoutMs,
+          ),
+        ),
+      ]);
+    };
+
+    const refreshSession = async (u: {
+      getIdToken: (forceRefresh?: boolean) => Promise<string>;
+    }) => {
+      const token = await getIdTokenWithTimeout(u, 2500);
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: token, remember: true }),
+      });
+    };
+
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = null;
+        return;
+      }
+      try {
+        await refreshSession(u);
+      } catch {
+        // ignore
+      }
+
+      if (!refreshInterval) {
+        refreshInterval = setInterval(
+          () => {
+            refreshSession(u).catch(() => {});
+          },
+          45 * 60 * 1000,
+        );
+      }
+    });
+
+    return () => {
+      unsub();
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
+  }, []);
 
   useEffect(() => {
     try {

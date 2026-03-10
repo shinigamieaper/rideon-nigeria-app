@@ -7,6 +7,8 @@ import { PartnerVehicleSubmissionSchema } from "@/lib/validation/partnerVehicleS
 import { computeCustomerUnitRateNgn } from "@/lib/pricing";
 import { createAuditLog } from "@/lib/auditLog";
 import { requireAdmin } from "@/lib/adminRbac";
+import { sendPartnerSubmissionUpdateNotification } from "@/lib/fcmAdmin";
+import { sendPartnerSubmissionUpdateEmail } from "@/lib/bookingEmails";
 
 async function verifyAdmin(req: NextRequest) {
   return requireAdmin(req, ["super_admin", "admin", "product_admin"]);
@@ -122,6 +124,9 @@ export async function PATCH(req: NextRequest) {
       .doc(id);
     const now = FieldValue.serverTimestamp();
 
+    let partnerId: string | null = null;
+    let vehicleLabel = "";
+
     let createdVehicleId: string | null = null;
 
     await adminDb.runTransaction(async (tx) => {
@@ -131,6 +136,10 @@ export async function PATCH(req: NextRequest) {
       }
 
       const data = snap.data() as Record<string, unknown>;
+      partnerId = String((data as any)?.partnerId || "").trim() || null;
+      const make = String((data as any)?.make || "").trim();
+      const model = String((data as any)?.model || "").trim();
+      vehicleLabel = `${make} ${model}`.trim();
       const status = String(data?.status || "pending_review");
       if (status !== "pending_review") {
         throw new Error("Submission is not pending review");
@@ -295,6 +304,60 @@ export async function PATCH(req: NextRequest) {
         details: "Requested changes on partner vehicle submission.",
         metadata: { message: reason || "" },
       });
+    }
+
+    if (partnerId) {
+      try {
+        const actionKey =
+          action === "approve"
+            ? "approved"
+            : action === "reject"
+              ? "rejected"
+              : "changes_requested";
+        const title =
+          action === "approve"
+            ? "Vehicle submission approved"
+            : action === "reject"
+              ? "Vehicle submission rejected"
+              : "Changes requested on vehicle submission";
+
+        const baseMsg = vehicleLabel
+          ? `Your vehicle submission (${vehicleLabel})`
+          : "Your vehicle submission";
+
+        const message =
+          action === "approve"
+            ? `${baseMsg} has been approved.`
+            : action === "reject"
+              ? `${baseMsg} was rejected.${reason ? ` Reason: ${reason}` : ""}`
+              : `${baseMsg} needs changes.${reason ? ` Message: ${reason}` : ""}`;
+
+        const clickAction = `/partner/vehicles/submissions/${encodeURIComponent(id)}`;
+
+        await Promise.allSettled([
+          sendPartnerSubmissionUpdateNotification(partnerId, {
+            submissionType: "vehicle",
+            submissionId: id,
+            action: actionKey,
+            title,
+            message,
+            clickAction,
+          }),
+          sendPartnerSubmissionUpdateEmail({
+            partnerId,
+            submissionType: "vehicle",
+            submissionId: id,
+            action: actionKey,
+            title,
+            message,
+          }),
+        ]);
+      } catch (e) {
+        console.error(
+          "[admin/vehicle-submissions] Failed notifying partner:",
+          e,
+        );
+      }
     }
 
     return NextResponse.json(

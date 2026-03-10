@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Upload,
   Eye,
+  Download,
 } from "lucide-react";
 
 type DocumentKey =
@@ -955,6 +956,17 @@ export default function DriverRecruitmentDocumentsPage() {
           </div>
         ) : viewerResolvedUrl ? (
           <div className="space-y-3">
+            <div className="flex items-center justify-end">
+              <a
+                href={`${viewerResolvedUrl}${viewerResolvedUrl.includes("?") ? "&" : "?"}download=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </a>
+            </div>
             {viewerKind === "image" ? (
               <img
                 src={viewerResolvedUrl}

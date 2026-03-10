@@ -78,7 +78,9 @@ export async function GET(
       return NextResponse.json({ error: "Missing file id." }, { status: 400 });
     }
 
-    const resolveOnly = new URL(req.url).searchParams.get("resolve") === "1";
+    const urlObj = new URL(req.url);
+    const resolveOnly = urlObj.searchParams.get("resolve") === "1";
+    const download = urlObj.searchParams.get("download") === "1";
 
     // Require auth and verify (Bearer token preferred, fallback to session cookie)
     const authHeader = req.headers.get("authorization") || "";
@@ -155,6 +157,7 @@ export async function GET(
         cloud_name: cloudName,
         api_key: cloudKey,
         api_secret: cloudSecret,
+        signature_algorithm: "sha256",
         secure: true,
         timeout: Number(process.env.CLOUDINARY_TIMEOUT_MS || 180000),
       });
@@ -165,27 +168,22 @@ export async function GET(
         deliveryType === "upload" &&
         (cld.publicId.startsWith("driver_docs/") ||
           cld.publicId.startsWith("full_time_driver_applications/") ||
-          cld.publicId.startsWith("full-time-driver-applications/"))
+          cld.publicId.startsWith("full-time-driver-applications/") ||
+          cld.publicId.startsWith("drivers/"))
       ) {
         deliveryType = "authenticated";
       }
+
+      const proxyBasePath = urlObj.pathname;
+      const proxyUrl = `${proxyBasePath}${download ? "?download=1" : ""}`;
 
       const expiresAt =
         Math.floor(Date.now() / 1000) +
         Number(process.env.CLOUDINARY_SIGNED_URL_TTL_SECONDS || 300);
 
-      const signedUrl = cloudinary.url(cld.publicId, {
-        resource_type: resourceType as any,
-        type: deliveryType as any,
-        sign_url: true,
-        expires_at: expiresAt,
-        ...(cld.format ? { format: cld.format } : {}),
-        secure: true,
-      });
-
       if (resolveOnly) {
         const fmt = String(cld.format || "").toLowerCase();
-        const isPdf = fmt === "pdf" || /\.pdf(\?|$)/i.test(signedUrl);
+        const isPdf = fmt === "pdf";
         const isImage =
           [
             "png",
@@ -197,61 +195,7 @@ export async function GET(
             "svg",
             "tif",
             "tiff",
-          ].includes(fmt) ||
-          /\.(png|jpe?g|webp|gif|bmp|svg|tiff?)(\?|$)/i.test(signedUrl);
-
-        let previewUrl: string | null = null;
-        let pageCount: number | null = null;
-        let pageUrls: string[] | null = null;
-
-        if (isPdf) {
-          try {
-            previewUrl = cloudinary.url(cld.publicId, {
-              resource_type: "image" as any,
-              type: deliveryType as any,
-              sign_url: true,
-              expires_at: expiresAt,
-              format: "jpg",
-              transformation: [{ page: 1, width: 1200, crop: "scale" }],
-              secure: true,
-            });
-          } catch {
-            previewUrl = null;
-          }
-
-          try {
-            const info = await cloudinary.api.resource(cld.publicId, {
-              resource_type: resourceType as any,
-              type: deliveryType as any,
-              pages: true as any,
-            });
-            pageCount =
-              typeof (info as any)?.pages === "number"
-                ? (info as any).pages
-                : null;
-          } catch {
-            pageCount = null;
-          }
-
-          if (pageCount && pageCount > 0) {
-            const maxPages = Math.max(
-              1,
-              Number(process.env.CLOUDINARY_PDF_MAX_PAGES_PREVIEW || 20),
-            );
-            const n = Math.min(pageCount, maxPages);
-            pageUrls = Array.from({ length: n }, (_, i) =>
-              cloudinary.url(cld.publicId, {
-                resource_type: "image" as any,
-                type: deliveryType as any,
-                sign_url: true,
-                expires_at: expiresAt,
-                format: "jpg",
-                transformation: [{ page: i + 1, width: 1200, crop: "scale" }],
-                secure: true,
-              }),
-            );
-          }
-        }
+          ].includes(fmt) || false;
 
         const kind: "pdf" | "image" | "other" = isPdf
           ? "pdf"
@@ -261,11 +205,8 @@ export async function GET(
 
         const res = NextResponse.json(
           {
-            url: signedUrl,
+            url: proxyUrl,
             kind,
-            ...(previewUrl ? { previewUrl } : {}),
-            ...(pageCount ? { pageCount } : {}),
-            ...(pageUrls ? { pageUrls } : {}),
           },
           { status: 200 },
         );
@@ -273,11 +214,72 @@ export async function GET(
         return res;
       }
 
-      // Redirect to the signed Cloudinary URL. This avoids server-side fetch/streaming failures
-      // while still requiring the user to be authorized to obtain the signed URL.
-      const res = NextResponse.redirect(signedUrl, 302);
-      res.headers.set("Cache-Control", "private, no-store");
-      return res;
+      const fmtRaw = String(cld.format || "")
+        .trim()
+        .toLowerCase();
+      const fmt = fmtRaw || "bin";
+      const privateDownloadUrlFn = (cloudinary as any)?.utils
+        ?.private_download_url as
+        | ((
+            publicId: string,
+            format: string,
+            options?: Record<string, any>,
+          ) => string)
+        | undefined;
+
+      if (!privateDownloadUrlFn) {
+        return NextResponse.json(
+          { error: "Cloudinary download helper is not available." },
+          { status: 500 },
+        );
+      }
+
+      const upstreamUrl = privateDownloadUrlFn(cld.publicId, fmt, {
+        resource_type: resourceType,
+        type: deliveryType,
+        expires_at: expiresAt,
+        attachment: download,
+      });
+
+      const range = req.headers.get("range");
+      const upstreamRes = await fetch(upstreamUrl, {
+        headers: range ? { range } : undefined,
+        redirect: "follow",
+      });
+
+      if (!upstreamRes.ok || !upstreamRes.body) {
+        const details = await upstreamRes.text().catch(() => "");
+        console.error(
+          "[api/files] Cloudinary upstream failed:",
+          upstreamRes.status,
+          details.slice(0, 500),
+        );
+        return NextResponse.json(
+          { error: "Failed to fetch file." },
+          { status: upstreamRes.status || 502 },
+        );
+      }
+
+      const contentType =
+        upstreamRes.headers.get("content-type") || "application/octet-stream";
+      const contentLength = upstreamRes.headers.get("content-length");
+      const contentRange = upstreamRes.headers.get("content-range");
+      const acceptRanges = upstreamRes.headers.get("accept-ranges");
+
+      const headers: Record<string, string> = {
+        "Content-Type": contentType,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": download ? "attachment" : "inline",
+      };
+      if (contentLength) headers["Content-Length"] = contentLength;
+      if (contentRange) headers["Content-Range"] = contentRange;
+      if (acceptRanges) headers["Accept-Ranges"] = acceptRanges;
+
+      return new Response(upstreamRes.body, {
+        status: upstreamRes.status,
+        headers,
+      });
     }
 
     const path = decodedId || Buffer.from(id, "base64").toString("utf8");
@@ -346,19 +348,16 @@ export async function GET(
     } catch {}
 
     if (resolveOnly) {
-      const expiresMs =
-        Number(process.env.CLOUDINARY_SIGNED_URL_TTL_SECONDS || 300) * 1000;
-      const [url] = await file.getSignedUrl({
-        action: "read",
-        expires: Date.now() + expiresMs,
-      });
       const kind: "pdf" | "image" | "other" =
         contentType === "application/pdf"
           ? "pdf"
           : contentType.startsWith("image/")
             ? "image"
             : "other";
-      const res = NextResponse.json({ url, kind }, { status: 200 });
+      const res = NextResponse.json(
+        { url: urlObj.pathname, kind },
+        { status: 200 },
+      );
       res.headers.set("Cache-Control", "private, no-store");
       return res;
     }
@@ -381,6 +380,8 @@ export async function GET(
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "private, no-store",
+        "Content-Disposition": download ? "attachment" : "inline",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {

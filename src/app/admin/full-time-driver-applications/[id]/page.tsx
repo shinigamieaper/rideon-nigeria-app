@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
+import { Modal } from "@/components";
 import {
   ArrowLeft,
   Briefcase,
@@ -16,6 +17,7 @@ import {
   Mail,
   MapPin,
   ExternalLink,
+  Download,
 } from "lucide-react";
 
 type KycSummary = {
@@ -81,6 +83,24 @@ export default function FullTimeDriverApplicationDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerTitle, setViewerTitle] = useState("");
+  const [viewerResolvedUrl, setViewerResolvedUrl] = useState("");
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerError, setViewerError] = useState<string | null>(null);
+  const [viewerKind, setViewerKind] = useState<"pdf" | "image" | "other">(
+    "other",
+  );
+
+  const closeViewer = () => {
+    setViewerOpen(false);
+    setViewerTitle("");
+    setViewerResolvedUrl("");
+    setViewerError(null);
+    setViewerLoading(false);
+    setViewerKind("other");
+  };
 
   const fetchApplication = useCallback(async () => {
     try {
@@ -225,6 +245,63 @@ export default function FullTimeDriverApplicationDetailPage({
     return null;
   };
 
+  const openDoc = async (label: string, rawUrl: string) => {
+    try {
+      setError(null);
+
+      setViewerTitle(label);
+      setViewerOpen(true);
+      setViewerResolvedUrl("");
+      setViewerError(null);
+      setViewerLoading(true);
+      setViewerKind("other");
+
+      const base = String(rawUrl || "").split("?")[0];
+      if (!base.startsWith("/api/files/")) {
+        throw new Error(
+          "This document link is not compatible. Please ask the applicant to re-upload the document.",
+        );
+      }
+
+      const user = auth.currentUser;
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      const token = await user.getIdToken();
+
+      const res = await fetch(`${base}?resolve=1`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j?.error || "Failed to open document");
+
+      const resolved = typeof j?.url === "string" ? j.url : "";
+      if (!resolved) throw new Error("Failed to open document");
+
+      const kindFromApi =
+        j?.kind === "pdf" || j?.kind === "image" || j?.kind === "other"
+          ? j.kind
+          : null;
+      if (kindFromApi) {
+        setViewerKind(kindFromApi);
+      } else {
+        const isPdf = /\.pdf(\?|$)/i.test(resolved);
+        const isImg = /\.(png|jpe?g|webp|gif|bmp|svg)(\?|$)/i.test(resolved);
+        setViewerKind(isPdf ? "pdf" : isImg ? "image" : "other");
+      }
+
+      setViewerResolvedUrl(resolved);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unable to open document.";
+      setError(msg);
+      setViewerError(msg);
+    } finally {
+      setViewerLoading(false);
+    }
+  };
+
   const renderDocRow = (label: string, value: any) => {
     const url = docUrl(value);
     const status =
@@ -245,15 +322,14 @@ export default function FullTimeDriverApplicationDetailPage({
           ) : null}
         </div>
         {url ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => void openDoc(label, url)}
             className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
           >
             View
             <ExternalLink className="h-4 w-4" />
-          </a>
+          </button>
         ) : (
           <span className="text-sm text-slate-400">—</span>
         )}
@@ -770,6 +846,62 @@ export default function FullTimeDriverApplicationDetailPage({
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={viewerOpen}
+        onClose={closeViewer}
+        title={viewerTitle || "Document"}
+        className="max-w-5xl"
+      >
+        {viewerLoading ? (
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Opening…</span>
+          </div>
+        ) : viewerError ? (
+          <div className="space-y-3">
+            <div className="text-sm text-red-700 dark:text-red-300">
+              {viewerError}
+            </div>
+          </div>
+        ) : viewerResolvedUrl ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-end">
+              <a
+                href={`${viewerResolvedUrl}${viewerResolvedUrl.includes("?") ? "&" : "?"}download=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </a>
+            </div>
+            {viewerKind === "image" ? (
+              <img
+                src={viewerResolvedUrl}
+                alt={viewerTitle}
+                className="w-full max-h-[70vh] object-contain rounded-xl bg-white/60 dark:bg-slate-900/40"
+              />
+            ) : viewerKind === "pdf" ? (
+              <iframe
+                src={viewerResolvedUrl}
+                className="w-full h-[70vh] rounded-xl bg-white/60 dark:bg-slate-900/40"
+              />
+            ) : (
+              <a
+                href={viewerResolvedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open
+              </a>
+            )}
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 }

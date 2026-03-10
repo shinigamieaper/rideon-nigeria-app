@@ -10,6 +10,97 @@ function safeBaseUrl(): string {
   return "http://localhost:3000";
 }
 
+async function isPartnerSubmissionUpdateEmailEnabled(
+  partnerId: string,
+): Promise<boolean> {
+  try {
+    const prefsDoc = await adminDb
+      .collection("partner_applications")
+      .doc(partnerId)
+      .collection("settings")
+      .doc("notifications")
+      .get();
+
+    if (!prefsDoc.exists) return true;
+
+    const prefs = (prefsDoc.data() as any) || {};
+    if (prefs.enabled === false) return false;
+
+    const channelVal = prefs?.fleet?.submission_updates?.email;
+    if (channelVal === false) return false;
+
+    return true;
+  } catch (e) {
+    console.warn(
+      "[bookingEmails] Failed to read partner submission notification prefs",
+      e,
+    );
+    return true;
+  }
+}
+
+export async function sendPartnerSubmissionUpdateEmail(args: {
+  partnerId: string;
+  submissionType: "vehicle" | "driver";
+  submissionId: string;
+  action: "approved" | "rejected" | "changes_requested";
+  title: string;
+  message: string;
+}): Promise<{ sent: boolean; skipped: boolean }> {
+  const resend = getResendClient();
+  const from = getEmailFrom();
+  if (!resend || !from) return { sent: false, skipped: true };
+
+  const allow = await isPartnerSubmissionUpdateEmailEnabled(args.partnerId);
+  if (!allow) return { sent: false, skipped: true };
+
+  const partnerSnap = await adminDb
+    .collection("partner_applications")
+    .doc(args.partnerId)
+    .get();
+  if (!partnerSnap.exists) return { sent: false, skipped: true };
+  const partner = partnerSnap.data() as any;
+  const to = typeof partner?.email === "string" ? partner.email.trim() : "";
+  if (!to) return { sent: false, skipped: true };
+
+  const lockId = `partner:${args.partnerId}:submission_update:${args.submissionType}:${args.submissionId}:${args.action}`;
+  const gotLock = await acquireEmailLock(lockId);
+  if (!gotLock) return { sent: false, skipped: true };
+
+  const baseUrl = safeBaseUrl();
+  const linkPath =
+    args.submissionType === "vehicle"
+      ? `/partner/vehicles/submissions/${encodeURIComponent(args.submissionId)}`
+      : `/partner/drivers/submissions/${encodeURIComponent(args.submissionId)}`;
+  const link = `${baseUrl}${linkPath}`;
+
+  const subject = `RideOn Partner: ${args.title}`;
+  const text = [args.message, "", "Open Partner Portal:", link].join("\n");
+  const html = `
+    <p>${args.message}</p>
+    <p><a href="${link}">Open Partner Portal</a></p>
+  `;
+
+  try {
+    await resend.emails.send({
+      from,
+      to,
+      subject,
+      text,
+      html,
+    });
+    await markEmailLock(lockId, { status: "sent" });
+    return { sent: true, skipped: false };
+  } catch (e: any) {
+    await markEmailLock(lockId, {
+      status: "failed",
+      error: e instanceof Error ? e.message : String(e),
+    });
+    console.warn("[bookingEmails] Failed sending partner submission email", e);
+    return { sent: false, skipped: true };
+  }
+}
+
 async function resolveUserEmail(uid: string): Promise<string> {
   try {
     const u = await adminAuth.getUser(uid);

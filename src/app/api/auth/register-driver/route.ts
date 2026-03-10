@@ -8,6 +8,8 @@ import {
   sendApplicantReferenceConfirmationEmail,
   sendReferenceRequestEmails,
 } from "@/lib/referenceEmails";
+import { sendNotificationToAdminUser } from "@/lib/fcmAdmin";
+import { getEmailFrom, getResendClient } from "@/lib/resendServer";
 
 export const runtime = "nodejs";
 
@@ -21,6 +23,13 @@ interface UserDoc {
   phoneNumber: string;
   createdAt?: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
   updatedAt?: FirebaseFirestore.Timestamp | FirebaseFirestore.FieldValue;
+}
+
+function getRequestBaseUrl(req: Request): string {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL || req.headers.get("origin") || "";
+  const base = String(raw).trim();
+  return base ? base.replace(/\/$/, "") : "http://localhost:3000";
 }
 
 interface DriverDoc {
@@ -109,6 +118,7 @@ export async function POST(req: Request) {
     const referenceRequestIds = referenceRequests.map((r) => r.token);
     const referenceExpiresAt = Timestamp.fromDate(addDays(new Date(), 7));
 
+    let createdNewDriver = false;
     await adminDb.runTransaction(async (tx) => {
       const userRef = adminDb.collection("users").doc(uid);
       const driverRef = adminDb.collection("drivers").doc(uid);
@@ -167,6 +177,7 @@ export async function POST(req: Request) {
       if (driverSnap.exists) {
         tx.set(driverRef, baseDriver, { merge: true });
       } else {
+        createdNewDriver = true;
         const createDriver: Record<string, any> = {
           userId: uid,
           status: "pending_review",
@@ -236,6 +247,85 @@ export async function POST(req: Request) {
       });
     } catch (e) {
       console.error("[register-driver] Failed sending reference emails:", e);
+    }
+
+    if (createdNewDriver) {
+      try {
+        const baseUrl = getRequestBaseUrl(req);
+        const adminLinkPath = `/admin/drivers/${encodeURIComponent(uid)}`;
+        const adminLink = `${baseUrl}${adminLinkPath}`;
+
+        const adminsSnap = await adminDb
+          .collection("users")
+          .where("isAdmin", "==", true)
+          .limit(200)
+          .get();
+
+        const adminUids: string[] = [];
+        const adminEmails: string[] = [];
+
+        adminsSnap.docs.forEach((d) => {
+          if (d.id === uid) return;
+          const data = d.data() as any;
+          const role = String(data?.adminRole || "admin");
+          if (
+            ![
+              "super_admin",
+              "admin",
+              "ops_admin",
+              "driver_admin",
+              "product_admin",
+            ].includes(role)
+          )
+            return;
+          adminUids.push(d.id);
+          const em = typeof data?.email === "string" ? data.email.trim() : "";
+          if (em) adminEmails.push(em);
+        });
+
+        const applicantName = `${firstName} ${lastName}`.trim() || "Driver";
+        const title = "New on-demand driver application";
+        const message = `${applicantName} submitted an on-demand driver application.`;
+
+        await Promise.allSettled(
+          adminUids.map((adminUid) =>
+            sendNotificationToAdminUser(adminUid, {
+              title,
+              body: message,
+              data: {
+                type: "on_demand_driver_application_submitted",
+                driverId: uid,
+              },
+              clickAction: adminLinkPath,
+            }),
+          ),
+        );
+
+        try {
+          const resend = getResendClient();
+          const from = getEmailFrom();
+          if (resend && from && adminEmails.length > 0) {
+            const subject = `${title}: ${applicantName}`;
+            const text = [message, "", "Review:", adminLink].join("\n");
+            const html = `
+              <p>${message}</p>
+              <p>Review:</p>
+              <p><a href="${adminLink}">${adminLink}</a></p>
+            `;
+            await resend.emails.send({
+              from,
+              to: adminEmails,
+              subject,
+              text,
+              html,
+            });
+          }
+        } catch (e) {
+          console.error("[register-driver] Failed sending admin emails:", e);
+        }
+      } catch (e) {
+        console.error("[register-driver] Failed notifying admins:", e);
+      }
     }
 
     // Set custom claim role=driver (merge with existing)

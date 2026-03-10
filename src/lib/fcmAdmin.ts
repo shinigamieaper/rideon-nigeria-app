@@ -946,6 +946,57 @@ export async function sendPartnerNewReservationRequestNotification(
   return { success: result.success, sentCount: result.sentCount };
 }
 
+export async function sendPartnerSubmissionUpdateNotification(
+  partnerId: string,
+  details: {
+    submissionType: "vehicle" | "driver";
+    submissionId: string;
+    action: "approved" | "rejected" | "changes_requested";
+    title: string;
+    message: string;
+    clickAction: string;
+  },
+): Promise<{ success: boolean; sentCount: number; skippedByPrefs?: boolean }> {
+  const prefs = await getPartnerNotificationPrefs(partnerId);
+  if (
+    !isPartnerNotificationEnabled(prefs, "fleet", "submission_updates", "push")
+  ) {
+    await logNotification({
+      type: "partner_submission_update",
+      targetType: "partner",
+      targetId: partnerId,
+      status: "skipped",
+      sentCount: 0,
+      failedCount: 0,
+      skippedByPrefs: true,
+      payload: {
+        title: details.title,
+        body: "Skipped by user preferences",
+      },
+      metadata: {
+        type: details.submissionType,
+        submissionId: details.submissionId,
+        action: details.action,
+      },
+    });
+    return { success: true, sentCount: 0, skippedByPrefs: true };
+  }
+
+  const result = await sendNotificationToPartner(partnerId, {
+    title: details.title,
+    body: details.message,
+    data: {
+      type: "partner_submission_update",
+      submissionType: details.submissionType,
+      submissionId: details.submissionId,
+      action: details.action,
+    },
+    clickAction: details.clickAction,
+  });
+
+  return { success: result.success, sentCount: result.sentCount };
+}
+
 /**
  * Send notification when driver is assigned to a booking
  * Respects customer's notification preferences

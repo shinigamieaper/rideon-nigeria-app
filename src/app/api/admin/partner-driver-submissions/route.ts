@@ -6,6 +6,8 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { PartnerDriverSubmissionSchema } from "@/lib/validation/partnerDriverSubmission";
 import { createAuditLog } from "@/lib/auditLog";
 import { requireAdmin } from "@/lib/adminRbac";
+import { sendPartnerSubmissionUpdateNotification } from "@/lib/fcmAdmin";
+import { sendPartnerSubmissionUpdateEmail } from "@/lib/bookingEmails";
 
 async function verifyAdmin(req: NextRequest) {
   return requireAdmin(req, [
@@ -122,6 +124,9 @@ export async function PATCH(req: NextRequest) {
       .doc(id);
     const now = FieldValue.serverTimestamp();
 
+    let partnerId: string | null = null;
+    let driverLabel = "";
+
     let createdPartnerDriverId: string | null = null;
 
     await adminDb.runTransaction(async (tx) => {
@@ -131,6 +136,10 @@ export async function PATCH(req: NextRequest) {
       }
 
       const data = snap.data() as any;
+      partnerId = String(data?.partnerId || "").trim() || null;
+      const fn = String(data?.firstName || "").trim();
+      const ln = String(data?.lastName || "").trim();
+      driverLabel = `${fn} ${ln}`.trim();
       const status = String(data?.status || "pending_review");
       if (status !== "pending_review") {
         throw new Error("Submission is not pending review");
@@ -253,6 +262,60 @@ export async function PATCH(req: NextRequest) {
         details: "Requested changes on partner driver submission.",
         metadata: { message: reason || "" },
       });
+    }
+
+    if (partnerId) {
+      try {
+        const actionKey =
+          action === "approve"
+            ? "approved"
+            : action === "reject"
+              ? "rejected"
+              : "changes_requested";
+        const title =
+          action === "approve"
+            ? "Driver submission approved"
+            : action === "reject"
+              ? "Driver submission rejected"
+              : "Changes requested on driver submission";
+
+        const baseMsg = driverLabel
+          ? `Your driver submission (${driverLabel})`
+          : "Your driver submission";
+
+        const message =
+          action === "approve"
+            ? `${baseMsg} has been approved.`
+            : action === "reject"
+              ? `${baseMsg} was rejected.${reason ? ` Reason: ${reason}` : ""}`
+              : `${baseMsg} needs changes.${reason ? ` Message: ${reason}` : ""}`;
+
+        const clickAction = `/partner/drivers/submissions/${encodeURIComponent(id)}`;
+
+        await Promise.allSettled([
+          sendPartnerSubmissionUpdateNotification(partnerId, {
+            submissionType: "driver",
+            submissionId: id,
+            action: actionKey,
+            title,
+            message,
+            clickAction,
+          }),
+          sendPartnerSubmissionUpdateEmail({
+            partnerId,
+            submissionType: "driver",
+            submissionId: id,
+            action: actionKey,
+            title,
+            message,
+          }),
+        ]);
+      } catch (e) {
+        console.error(
+          "[admin/partner-driver-submissions] Failed notifying partner:",
+          e,
+        );
+      }
     }
 
     return NextResponse.json(

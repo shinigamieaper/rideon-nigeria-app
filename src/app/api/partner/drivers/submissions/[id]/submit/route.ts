@@ -4,6 +4,8 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { canWrite, resolvePartnerPortalContext } from "@/lib/partnerPortalAuth";
 import { PartnerDriverSubmissionSchema } from "@/lib/validation/partnerDriverSubmission";
 import { zodErrorToFieldMap } from "@/lib/validation/errors";
+import { sendNotificationToAdminUser } from "@/lib/fcmAdmin";
+import { getEmailFrom, getResendClient } from "@/lib/resendServer";
 
 export const runtime = "nodejs";
 
@@ -13,6 +15,13 @@ type PartnerSubmissionStatus =
   | "approved"
   | "rejected"
   | "changes_requested";
+
+function getRequestBaseUrl(req: Request): string {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL || req.headers.get("origin") || "";
+  const base = String(raw).trim();
+  return base ? base.replace(/\/$/, "") : "http://localhost:3000";
+}
 
 export async function POST(
   req: Request,
@@ -125,6 +134,85 @@ export async function POST(
       },
       { merge: true },
     );
+
+    try {
+      const adminsSnap = await adminDb
+        .collection("users")
+        .where("isAdmin", "==", true)
+        .limit(200)
+        .get();
+
+      const adminUids: string[] = [];
+      const adminEmails: string[] = [];
+      adminsSnap.docs.forEach((doc) => {
+        if (doc.id === ctx.partnerId) return;
+        const data = doc.data() as any;
+        const role = String(data?.adminRole || "admin");
+        if (
+          !["super_admin", "admin", "ops_admin", "driver_admin"].includes(role)
+        )
+          return;
+        adminUids.push(doc.id);
+        const em = typeof data?.email === "string" ? data.email.trim() : "";
+        if (em) adminEmails.push(em);
+      });
+
+      const adminLinkPath = "/admin/partner-driver-submissions";
+      const title = "New partner driver submission";
+      const body = "A partner submitted a driver for review.";
+
+      await Promise.allSettled(
+        adminUids.map((adminUid) =>
+          sendNotificationToAdminUser(adminUid, {
+            title,
+            body,
+            data: {
+              type: "partner_driver_submission_pending",
+              submissionId: docId,
+              partnerId: ctx.partnerId,
+            },
+            clickAction: adminLinkPath,
+          }),
+        ),
+      );
+
+      try {
+        const resend = getResendClient();
+        const from = getEmailFrom();
+        if (resend && from && adminEmails.length > 0) {
+          const baseUrl = getRequestBaseUrl(req);
+          const link = `${baseUrl}${adminLinkPath}`;
+          const subject = "RideOn Admin: New partner driver submission";
+          const text = [
+            "A partner submitted a driver for review.",
+            "",
+            "Review:",
+            link,
+          ].join("\n");
+          const html = `
+            <p>A partner submitted a driver for review.</p>
+            <p><a href="${link}">Open Admin Portal</a></p>
+          `;
+          await resend.emails.send({
+            from,
+            to: adminEmails,
+            subject,
+            text,
+            html,
+          });
+        }
+      } catch (e) {
+        console.error(
+          "[partner/drivers/submissions/[id]/submit] Failed sending admin emails:",
+          e,
+        );
+      }
+    } catch (e) {
+      console.error(
+        "[partner/drivers/submissions/[id]/submit] Failed notifying admins:",
+        e,
+      );
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
