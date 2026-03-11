@@ -990,17 +990,15 @@ export default function AdminPartnersPage() {
         className="max-w-4xl"
       >
         {detailLoading ? (
-          <div className="p-6 flex items-center justify-center">
+          <div className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
           </div>
         ) : detailError ? (
-          <div className="p-6">
-            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300">
-              {detailError}
-            </div>
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300">
+            {detailError}
           </div>
         ) : detail ? (
-          <div className="p-6 space-y-6">
+          <div className="space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
@@ -1030,8 +1028,8 @@ export default function AdminPartnersPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   Partner Type
                 </div>
@@ -1039,7 +1037,7 @@ export default function AdminPartnersPage() {
                   {String(detail?.partnerType || "individual")}
                 </div>
               </div>
-              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   CAC Number
                 </div>
@@ -1050,7 +1048,7 @@ export default function AdminPartnersPage() {
             </div>
 
             {String(detail?.partnerType || "") === "individual" ? (
-              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   BVN / NIN
                 </div>
@@ -1061,8 +1059,8 @@ export default function AdminPartnersPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                   <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Director Name
                   </div>
@@ -1070,7 +1068,7 @@ export default function AdminPartnersPage() {
                     {String(detail?.directorName || "").trim() || "—"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                   <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Director Email
                   </div>
@@ -1078,7 +1076,7 @@ export default function AdminPartnersPage() {
                     {String(detail?.directorEmail || "").trim() || "—"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                   <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Director Phone
                   </div>
@@ -1089,7 +1087,7 @@ export default function AdminPartnersPage() {
               </div>
             )}
 
-            <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+            <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Payout Details
               </div>
@@ -1124,7 +1122,7 @@ export default function AdminPartnersPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+            <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 KYC
               </div>
@@ -1211,7 +1209,7 @@ export default function AdminPartnersPage() {
 
               if (items.length === 0) return null;
               return (
-                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4">
                   <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Uploaded Documents
                   </div>

@@ -60,12 +60,12 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         ref={modalRef}
         className={[
-          "relative w-full max-w-md bg-white/60 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-slate-700 shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden",
+          "relative w-full max-w-md max-h-[calc(100vh-2rem)] bg-white/60 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-slate-700 shadow-2xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden",
           className || "",
         ].join(" ")}
         {...props}
       >
-        <div className="p-6 sm:p-8">
+        <div className="p-6 sm:p-8 flex flex-col min-h-0 max-h-[calc(100vh-2rem)]">
           <div className="min-w-0">
             <h3
               id="modal-title"
@@ -74,7 +74,7 @@ export const Modal: React.FC<ModalProps> = ({
               {title}
             </h3>
           </div>
-          <div className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+          <div className="mt-4 min-h-0 overflow-y-auto text-sm text-slate-600 dark:text-slate-300">
             {children}
           </div>
         </div>
