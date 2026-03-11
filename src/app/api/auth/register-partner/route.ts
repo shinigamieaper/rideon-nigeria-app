@@ -39,6 +39,49 @@ function getRequestBaseUrl(req: Request): string {
   return base ? base.replace(/\/$/, "") : "http://localhost:3000";
 }
 
+async function acquireEmailLock(lockId: string): Promise<boolean> {
+  try {
+    await adminDb.collection("email_locks").doc(lockId).create({
+      status: "sending",
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch (e: any) {
+    const code = String(e?.code ?? "");
+    const msg = String(e?.message ?? "").toLowerCase();
+    if (
+      code === "6" ||
+      msg.includes("already exists") ||
+      msg.includes("already-exists")
+    ) {
+      return false;
+    }
+    throw e;
+  }
+}
+
+async function markEmailLock(
+  lockId: string,
+  args: { status: "sent" | "failed"; error?: string },
+) {
+  try {
+    await adminDb
+      .collection("email_locks")
+      .doc(lockId)
+      .set(
+        {
+          status: args.status,
+          error: args.error || null,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+  } catch (e) {
+    console.warn("[register-partner] Failed to update email lock", lockId, e);
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const authHeader = req.headers.get("authorization") || "";
@@ -70,6 +113,7 @@ export async function POST(req: Request) {
     const email = (authUser.email || data.email).trim().toLowerCase();
 
     let createdNewApplication = false;
+    let resubmittedRejectedApplication = false;
     await adminDb.runTransaction(async (tx) => {
       const userRef = adminDb.collection("users").doc(uid);
       const appRef = adminDb.collection("partner_applications").doc(uid);
@@ -132,6 +176,14 @@ export async function POST(req: Request) {
       }
 
       if (appSnap.exists) {
+        const prev = appSnap.data() as any;
+        const prevStatus = String(prev?.status || "");
+        if (prevStatus === "rejected") {
+          resubmittedRejectedApplication = true;
+          (baseApp as any).rejectedAt = FieldValue.delete();
+          (baseApp as any).rejectedBy = FieldValue.delete();
+          (baseApp as any).rejectedReason = FieldValue.delete();
+        }
         tx.set(appRef, baseApp, { merge: true });
       } else {
         createdNewApplication = true;
@@ -143,7 +195,7 @@ export async function POST(req: Request) {
       }
     });
 
-    if (createdNewApplication) {
+    if (createdNewApplication || resubmittedRejectedApplication) {
       try {
         const baseUrl = getRequestBaseUrl(req);
         const adminLinkPath = "/admin/partners";
@@ -179,8 +231,31 @@ export async function POST(req: Request) {
             : `${String(data.firstName || "").trim()} ${String(data.lastName || "").trim()}`.trim() ||
               "Partner";
 
-        const title = "New partner application";
-        const message = `${applicantName} submitted a partner application.`;
+        const title = resubmittedRejectedApplication
+          ? "Partner application resubmitted"
+          : "New partner application";
+        const message = resubmittedRejectedApplication
+          ? `${applicantName} updated and resubmitted their partner application.`
+          : `${applicantName} submitted a partner application.`;
+
+        const lockKey = (() => {
+          if (!resubmittedRejectedApplication) return `submitted:${uid}`;
+          return `resubmitted:${uid}`;
+        })();
+        let lockId = `admin_emails:partner_application:${lockKey}`;
+        try {
+          const appAfter = await adminDb
+            .collection("partner_applications")
+            .doc(uid)
+            .get();
+          const d = appAfter.exists ? (appAfter.data() as any) : null;
+          const updatedAtIso = d?.updatedAt?.toDate?.()?.toISOString?.() || "";
+          if (updatedAtIso) {
+            lockId = `admin_emails:partner_application:${lockKey}:${updatedAtIso}`;
+          }
+        } catch {
+          // ignore
+        }
 
         await Promise.allSettled(
           adminUids.map((adminUid) =>
@@ -188,7 +263,9 @@ export async function POST(req: Request) {
               title,
               body: message,
               data: {
-                type: "partner_application_submitted",
+                type: resubmittedRejectedApplication
+                  ? "partner_application_resubmitted"
+                  : "partner_application_submitted",
                 partnerId: uid,
               },
               clickAction: adminLinkPath,
@@ -200,20 +277,32 @@ export async function POST(req: Request) {
           const resend = getResendClient();
           const from = getEmailFrom();
           if (resend && from && adminEmails.length > 0) {
-            const subject = `${title}: ${applicantName}`;
-            const text = [message, "", "Review:", adminLink].join("\n");
-            const html = `
-              <p>${message}</p>
-              <p>Review:</p>
-              <p><a href="${adminLink}">${adminLink}</a></p>
-            `;
-            await resend.emails.send({
-              from,
-              to: adminEmails,
-              subject,
-              text,
-              html,
-            });
+            const gotLock = await acquireEmailLock(lockId);
+            if (gotLock) {
+              const subject = `${title}: ${applicantName}`;
+              const text = [message, "", "Review:", adminLink].join("\n");
+              const html = `
+                <p>${message}</p>
+                <p>Review:</p>
+                <p><a href="${adminLink}">${adminLink}</a></p>
+              `;
+              try {
+                await resend.emails.send({
+                  from,
+                  to: adminEmails,
+                  subject,
+                  text,
+                  html,
+                });
+                await markEmailLock(lockId, { status: "sent" });
+              } catch (e: any) {
+                await markEmailLock(lockId, {
+                  status: "failed",
+                  error: e instanceof Error ? e.message : String(e),
+                });
+                throw e;
+              }
+            }
           }
         } catch (e) {
           console.error("[register-partner] Failed sending admin emails:", e);
