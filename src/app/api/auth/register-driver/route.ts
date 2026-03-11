@@ -32,6 +32,49 @@ function getRequestBaseUrl(req: Request): string {
   return base ? base.replace(/\/$/, "") : "http://localhost:3000";
 }
 
+async function acquireEmailLock(lockId: string): Promise<boolean> {
+  try {
+    await adminDb.collection("email_locks").doc(lockId).create({
+      status: "sending",
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch (e: any) {
+    const code = String(e?.code ?? "");
+    const msg = String(e?.message ?? "").toLowerCase();
+    if (
+      code === "6" ||
+      msg.includes("already exists") ||
+      msg.includes("already-exists")
+    ) {
+      return false;
+    }
+    throw e;
+  }
+}
+
+async function markEmailLock(
+  lockId: string,
+  args: { status: "sent" | "failed"; error?: string },
+) {
+  try {
+    await adminDb
+      .collection("email_locks")
+      .doc(lockId)
+      .set(
+        {
+          status: args.status,
+          error: args.error || null,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+  } catch (e) {
+    console.warn("[register-driver] Failed to update email lock", lockId, e);
+  }
+}
+
 interface DriverDoc {
   userId: string; // references Firebase UID
   status: "pending_review" | "approved" | "rejected";
@@ -119,6 +162,7 @@ export async function POST(req: Request) {
     const referenceExpiresAt = Timestamp.fromDate(addDays(new Date(), 7));
 
     let createdNewDriver = false;
+    let resubmittedRejectedDriver = false;
     await adminDb.runTransaction(async (tx) => {
       const userRef = adminDb.collection("users").doc(uid);
       const driverRef = adminDb.collection("drivers").doc(uid);
@@ -175,6 +219,14 @@ export async function POST(req: Request) {
         updatedAt: FieldValue.serverTimestamp(),
       } as Partial<DriverDoc> & Record<string, unknown>;
       if (driverSnap.exists) {
+        const prev = driverSnap.data() as any;
+        const prevStatus = String(prev?.status || "");
+        if (prevStatus === "rejected") {
+          resubmittedRejectedDriver = true;
+          (baseDriver as any).rejectedAt = FieldValue.delete();
+          (baseDriver as any).rejectedBy = FieldValue.delete();
+          (baseDriver as any).rejectionReason = FieldValue.delete();
+        }
         tx.set(driverRef, baseDriver, { merge: true });
       } else {
         createdNewDriver = true;
@@ -249,7 +301,7 @@ export async function POST(req: Request) {
       console.error("[register-driver] Failed sending reference emails:", e);
     }
 
-    if (createdNewDriver) {
+    if (createdNewDriver || resubmittedRejectedDriver) {
       try {
         const baseUrl = getRequestBaseUrl(req);
         const adminLinkPath = `/admin/drivers/${encodeURIComponent(uid)}`;
@@ -284,8 +336,31 @@ export async function POST(req: Request) {
         });
 
         const applicantName = `${firstName} ${lastName}`.trim() || "Driver";
-        const title = "New on-demand driver application";
-        const message = `${applicantName} submitted an on-demand driver application.`;
+        const title = resubmittedRejectedDriver
+          ? "On-demand driver application resubmitted"
+          : "New on-demand driver application";
+        const message = resubmittedRejectedDriver
+          ? `${applicantName} updated and resubmitted an on-demand driver application.`
+          : `${applicantName} submitted an on-demand driver application.`;
+
+        const lockKey = (() => {
+          if (!resubmittedRejectedDriver) return `submitted:${uid}`;
+          return `resubmitted:${uid}`;
+        })();
+        let lockId = `admin_emails:on_demand_driver_application:${lockKey}`;
+        try {
+          const driverAfter = await adminDb
+            .collection("drivers")
+            .doc(uid)
+            .get();
+          const d = driverAfter.exists ? (driverAfter.data() as any) : null;
+          const updatedAtIso = d?.updatedAt?.toDate?.()?.toISOString?.() || "";
+          if (updatedAtIso) {
+            lockId = `admin_emails:on_demand_driver_application:${lockKey}:${updatedAtIso}`;
+          }
+        } catch {
+          // ignore
+        }
 
         await Promise.allSettled(
           adminUids.map((adminUid) =>
@@ -293,7 +368,9 @@ export async function POST(req: Request) {
               title,
               body: message,
               data: {
-                type: "on_demand_driver_application_submitted",
+                type: resubmittedRejectedDriver
+                  ? "on_demand_driver_application_resubmitted"
+                  : "on_demand_driver_application_submitted",
                 driverId: uid,
               },
               clickAction: adminLinkPath,
@@ -305,20 +382,32 @@ export async function POST(req: Request) {
           const resend = getResendClient();
           const from = getEmailFrom();
           if (resend && from && adminEmails.length > 0) {
-            const subject = `${title}: ${applicantName}`;
-            const text = [message, "", "Review:", adminLink].join("\n");
-            const html = `
-              <p>${message}</p>
-              <p>Review:</p>
-              <p><a href="${adminLink}">${adminLink}</a></p>
-            `;
-            await resend.emails.send({
-              from,
-              to: adminEmails,
-              subject,
-              text,
-              html,
-            });
+            const gotLock = await acquireEmailLock(lockId);
+            if (gotLock) {
+              const subject = `${title}: ${applicantName}`;
+              const text = [message, "", "Review:", adminLink].join("\n");
+              const html = `
+                <p>${message}</p>
+                <p>Review:</p>
+                <p><a href="${adminLink}">${adminLink}</a></p>
+              `;
+              try {
+                await resend.emails.send({
+                  from,
+                  to: adminEmails,
+                  subject,
+                  text,
+                  html,
+                });
+                await markEmailLock(lockId, { status: "sent" });
+              } catch (e: any) {
+                await markEmailLock(lockId, {
+                  status: "failed",
+                  error: e instanceof Error ? e.message : String(e),
+                });
+                throw e;
+              }
+            }
           }
         } catch (e) {
           console.error("[register-driver] Failed sending admin emails:", e);

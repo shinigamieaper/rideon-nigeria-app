@@ -1,10 +1,88 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 import { createAuditLog, AuditActionType } from "@/lib/auditLog";
 import { requireAdmin } from "@/lib/adminRbac";
+import { getEmailFrom, getResendClient } from "@/lib/resendServer";
+
+function getRequestBaseUrl(req: NextRequest): string {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL || req.headers.get("origin") || "";
+  const base = String(raw).trim();
+  if (base) return base.replace(/\/$/, "");
+  try {
+    const u = new URL(req.url);
+    if (u.origin) return u.origin;
+  } catch {}
+  return "http://localhost:3000";
+}
+
+async function acquireEmailLock(lockId: string): Promise<boolean> {
+  try {
+    await adminDb.collection("email_locks").doc(lockId).create({
+      status: "sending",
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch (e: any) {
+    const code = String(e?.code ?? "");
+    const msg = String(e?.message ?? "").toLowerCase();
+    if (
+      code === "6" ||
+      msg.includes("already exists") ||
+      msg.includes("already-exists")
+    ) {
+      return false;
+    }
+    throw e;
+  }
+}
+
+async function markEmailLock(
+  lockId: string,
+  args: { status: "sent" | "failed"; error?: string },
+) {
+  try {
+    await adminDb
+      .collection("email_locks")
+      .doc(lockId)
+      .set(
+        {
+          status: args.status,
+          error: args.error || null,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+  } catch (e) {
+    console.warn(
+      "[admin/drivers/[driverId]] Failed to update email lock",
+      lockId,
+      e,
+    );
+  }
+}
+
+async function resolveDriverEmail(driverId: string): Promise<string> {
+  try {
+    const u = await adminAuth.getUser(driverId);
+    const email = (u.email || "").trim();
+    if (email) return email;
+  } catch {}
+
+  try {
+    const snap = await adminDb.collection("users").doc(driverId).get();
+    if (!snap.exists) return "";
+    const data = snap.data() as any;
+    const email = typeof data?.email === "string" ? data.email.trim() : "";
+    return email;
+  } catch {
+    return "";
+  }
+}
 
 function normalizeCloudinaryDocUrl(url: any, ownerUid: string): any {
   if (typeof url !== "string") return url;
@@ -568,6 +646,116 @@ export async function PATCH(
       }
     } catch (err) {
       console.warn("Failed to create notification:", err);
+    }
+
+    if (action !== "set_recruitment_visibility") {
+      try {
+        const resend = getResendClient();
+        const from = getEmailFrom();
+        if (resend && from) {
+          const to = await resolveDriverEmail(driverId);
+          if (to) {
+            const baseUrl = getRequestBaseUrl(req).replace(/\/$/, "");
+            const nextPath =
+              action === "approve"
+                ? "/driver"
+                : action === "reject"
+                  ? "/register/driver"
+                  : "/driver";
+            const link = `${baseUrl}/login?next=${encodeURIComponent(nextPath)}`;
+
+            const driverAfterSnap = await driverRef.get();
+            const driverAfter = driverAfterSnap.exists
+              ? (driverAfterSnap.data() as any)
+              : null;
+            const eventAt =
+              action === "approve"
+                ? driverAfter?.approvedAt
+                : action === "reject"
+                  ? driverAfter?.rejectedAt
+                  : action === "suspend"
+                    ? driverAfter?.suspendedAt
+                    : driverAfter?.reinstatedAt;
+            const eventKey =
+              eventAt?.toDate?.()?.toISOString?.() ||
+              driverAfter?.updatedAt?.toDate?.()?.toISOString?.() ||
+              new Date().toISOString();
+            const lockId = `driver:${driverId}:status:${action}:${eventKey}`;
+            const gotLock = await acquireEmailLock(lockId);
+            if (gotLock) {
+              const subject =
+                action === "approve"
+                  ? "RideOn: Your driver application is approved"
+                  : action === "reject"
+                    ? "RideOn: Update needed for your driver application"
+                    : action === "suspend"
+                      ? "RideOn: Your driver account has been suspended"
+                      : "RideOn: Your driver account has been reinstated";
+
+              const reasonLine =
+                (action === "reject" || action === "suspend") && reason
+                  ? `Reason: ${reason}`
+                  : "";
+
+              const headline =
+                action === "approve"
+                  ? `Hi ${driverName}, your driver application has been approved.`
+                  : action === "reject"
+                    ? `Hi ${driverName}, your driver application needs an update before it can be approved.`
+                    : action === "suspend"
+                      ? `Hi ${driverName}, your driver account has been suspended.`
+                      : `Hi ${driverName}, your driver account has been reinstated.`;
+
+              const nextLine =
+                action === "approve"
+                  ? "You can now sign in and start accepting trips."
+                  : action === "reject"
+                    ? "Please sign in, correct the requested details, and submit again."
+                    : action === "suspend"
+                      ? "If you believe this is a mistake, please reply to this email or contact support."
+                      : "You can now sign in and continue using the driver portal.";
+
+              const text = [
+                headline,
+                reasonLine,
+                "",
+                nextLine,
+                "",
+                "Open:",
+                link,
+              ]
+                .filter(Boolean)
+                .join("\n");
+
+              const html = `
+                <p><strong>${headline}</strong></p>
+                ${reasonLine ? `<p>${reasonLine}</p>` : ""}
+                <p>${nextLine}</p>
+                <p><a href="${link}">Open RideOn</a></p>
+              `;
+
+              try {
+                await resend.emails.send({ from, to, subject, text, html });
+                await markEmailLock(lockId, { status: "sent" });
+              } catch (e: any) {
+                await markEmailLock(lockId, {
+                  status: "failed",
+                  error: e instanceof Error ? e.message : String(e),
+                });
+                console.error(
+                  "[admin/drivers/[driverId]] Failed sending driver status email",
+                  e,
+                );
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error(
+          "[admin/drivers/[driverId]] Failed preparing driver status email",
+          e,
+        );
+      }
     }
 
     return NextResponse.json(
