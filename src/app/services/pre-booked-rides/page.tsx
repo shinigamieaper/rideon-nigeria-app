@@ -4,9 +4,9 @@ import { Calendar, Shield, Car, Clock, CheckCircle2 } from "lucide-react";
 import { BlurText } from "../../../../components";
 
 export const metadata: Metadata = {
-  title: "Chauffeur-Driven Rentals | RideOn Nigeria",
+  title: "Premium Rentals | RideOn Nigeria",
   description:
-    "Reserve premium vehicles with professional chauffeurs for daily or multi-day journeys. Browse our fleet, schedule your pickup, and enjoy safe, reliable transportation across Nigeria.",
+    "Reserve premium vehicles with professional drivers for daily or multi-day journeys. Browse our fleet, schedule your pickup, and enjoy safe, reliable transportation across Nigeria.",
 };
 
 export default function PreBookedRidesPage() {
@@ -19,7 +19,7 @@ export default function PreBookedRidesPage() {
     },
     {
       icon: Shield,
-      title: "Professional Chauffeurs",
+      title: "Professional Drivers",
       description:
         "All drivers are vetted, licensed, and trained to provide the highest standard of service.",
     },
@@ -33,7 +33,7 @@ export default function PreBookedRidesPage() {
       icon: Clock,
       title: "Punctual Service",
       description:
-        "Your chauffeur arrives on time, every time. Track their arrival in real-time via our app.",
+        "Your driver arrives on time, every time. Track their arrival in real-time via our app.",
     },
   ];
 
@@ -60,7 +60,7 @@ export default function PreBookedRidesPage() {
       step: 4,
       title: "Enjoy Your Journey",
       description:
-        "Your professional chauffeur arrives with your vehicle at the scheduled time.",
+        "Your professional driver arrives with your vehicle at the scheduled time.",
     },
   ];
 
@@ -74,7 +74,7 @@ export default function PreBookedRidesPage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
               <BlurText
                 as="span"
-                text="Chauffeur-Driven Rentals"
+                text="Premium Rentals"
                 animateBy="words"
                 direction="top"
                 delay={80}
@@ -83,7 +83,7 @@ export default function PreBookedRidesPage() {
             <p className="mt-6 text-lg sm:text-xl text-slate-600 dark:text-slate-400">
               <BlurText
                 as="span"
-                text="Reserve a premium vehicle with a professional chauffeur for your daily or multi-day transportation needs. Safe, reliable, and hassle-free."
+                text="Reserve a premium vehicle with a professional driver for your daily or multi-day transportation needs. Safe, reliable, and hassle-free."
                 animateBy="words"
                 direction="top"
                 delay={24}
@@ -126,7 +126,7 @@ export default function PreBookedRidesPage() {
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               <BlurText
                 as="span"
-                text="Why Choose Our Chauffeur Service"
+                text="Why Choose RideOn"
                 animateBy="words"
                 direction="top"
                 delay={80}
@@ -135,7 +135,7 @@ export default function PreBookedRidesPage() {
             <p className="text-lg text-slate-600 dark:text-slate-400">
               <BlurText
                 as="span"
-                text="Experience the difference with our premium chauffeur-driven service."
+                text="Experience the difference with our premium rental service."
                 animateBy="words"
                 direction="top"
                 delay={24}
@@ -195,7 +195,7 @@ export default function PreBookedRidesPage() {
             <p className="text-lg text-slate-600 dark:text-slate-400">
               <BlurText
                 as="span"
-                text="Getting a chauffeur-driven car is simple and straightforward."
+                text="Booking a premium rental is simple and straightforward."
                 animateBy="words"
                 direction="top"
                 delay={24}
@@ -248,7 +248,7 @@ export default function PreBookedRidesPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               <BlurText
                 as="span"
-                text="Ready to reserve your chauffeur?"
+                text="Ready to reserve your ride?"
                 animateBy="words"
                 direction="top"
                 delay={80}

@@ -19,12 +19,12 @@ const SECTIONS: FaqSection[] = [
     title: "For Customers",
     items: [
       {
-        q: "How do I book a chauffeur-driven car?",
-        a: "You can book a chauffeur-driven car easily through our app. Browse our vehicle catalog, pick your dates and times, enter your pickup (and optional drop-off) details, then confirm your reservation. You'll see your total rental price upfront before you confirm.",
+        q: "How do I book a ride?",
+        a: "You can book a ride easily through our app. Browse our vehicle catalog, pick your dates and times, enter your pickup (and optional drop-off) details, then confirm your reservation. You'll see your total price upfront before you confirm.",
       },
       {
         q: "What safety features are in place?",
-        a: "Your safety is our priority. All professional chauffeurs undergo background checks and onboarding. For each active reservation, you can see your driver's profile and vehicle details, and our support team is available if you need help.",
+        a: "Your safety is our priority. All professional drivers undergo background checks and onboarding. For each active reservation, you can see your driver's profile and vehicle details, and our support team is available if you need help.",
       },
     ],
   },

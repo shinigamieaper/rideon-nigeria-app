@@ -52,7 +52,7 @@ export default function DriveWithUsPage() {
               <h3 className="text-2xl font-semibold mb-3">
                 <BlurText
                   as="span"
-                  text="On-Demand Chauffeur"
+                  text="On-Demand Driver"
                   animateBy="words"
                   direction="top"
                   delay={100}

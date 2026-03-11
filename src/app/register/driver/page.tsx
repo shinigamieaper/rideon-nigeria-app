@@ -695,7 +695,7 @@ export function OnDemandDriverRegisterPage() {
               Application Type
             </span>
             <span className="inline-flex items-center rounded-full px-3 py-1 text-xs sm:text-sm font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-              Chauffeur Registration
+              On-Demand Driver Registration
             </span>
           </div>
         </div>
@@ -846,8 +846,8 @@ export function OnDemandDriverRegisterPage() {
                       Service Cities <span className="text-red-500">*</span>
                     </label>
                     <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1">
-                      Select at least one city where you can provide chauffeur
-                      services.
+                      Select at least one city where you can provide Drive My
+                      Car services.
                     </p>
                     <MultiSelectCombobox
                       options={serviceCities.map((city) => ({
@@ -1304,7 +1304,7 @@ export default function DriverRegisterPage() {
           <BlurText
             as="p"
             className="mt-4 text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
-            text="Choose the program that matches you: become an on-demand chauffeur on our platform, or apply for a full-time driver role via our recruitment program."
+            text="Choose the program that matches you: become an on-demand driver on our platform, or apply for a full-time driver role via our recruitment program."
             animateBy="words"
             direction="top"
             delay={24}
@@ -1326,7 +1326,7 @@ export default function DriverRegisterPage() {
               <h2 className="text-2xl font-semibold mt-6">
                 <BlurText
                   as="span"
-                  text="On-Demand Chauffeur"
+                  text="On-Demand Driver"
                   animateBy="words"
                   direction="top"
                   delay={100}
@@ -1335,7 +1335,7 @@ export default function DriverRegisterPage() {
               <BlurText
                 as="p"
                 className="text-gray-600 dark:text-slate-400 mt-2 text-base"
-                text="Register as a platform driver to accept on-demand chauffeur reservations and earn based on completed trips."
+                text="Register as a platform driver to accept on-demand Drive My Car requests and earn based on completed trips."
                 animateBy="words"
                 direction="top"
                 delay={24}

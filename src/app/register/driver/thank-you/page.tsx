@@ -130,7 +130,7 @@ export default function DriverThankYouPage() {
         <BlurText
           as="p"
           className="mt-3 text-slate-600 dark:text-slate-400"
-          text="Thank you for applying to join RideOn's professional chauffeur network. Your application is now under review. Once approved, you'll be able to accept rental reservations from customers who book premium chauffeur services. We'll notify you by email once a decision is made."
+          text="Thank you for applying to join RideOn's professional driver network. Your application is now under review. Once approved, you'll be able to accept reservations from customers. We'll notify you by email once a decision is made."
           animateBy="words"
           direction="top"
           delay={24}

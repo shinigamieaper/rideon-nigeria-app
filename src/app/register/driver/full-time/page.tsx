@@ -925,7 +925,7 @@ export default function FullTimeDriverRegisterPage() {
                         profileSummary: e.target.value,
                       }))
                     }
-                    placeholder="Briefly describe your experience, certifications, and what makes you a great chauffeur."
+                    placeholder="Briefly describe your experience, certifications, and what makes you a great driver."
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition text-sm"
                   />
                 </div>

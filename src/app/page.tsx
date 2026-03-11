@@ -7,9 +7,9 @@ export default function HomePage() {
     {
       id: "catalog",
       icon: Car,
-      title: "Chauffeur-Driven Rentals",
+      title: "Premium Rentals",
       description:
-        "Reserve premium vehicles with professional chauffeurs for daily or multi-day journeys.",
+        "Reserve premium vehicles with professional drivers for daily or multi-day journeys.",
       href: "/services/pre-booked-rides",
       ctaText: "Learn More",
       ctaHref: "/services/pre-booked-rides",
@@ -20,7 +20,7 @@ export default function HomePage() {
       icon: UserCheck,
       title: "Drive My Car",
       description:
-        "Need someone to drive your own vehicle? Our chauffeurs meet you and drive your car.",
+        "Need someone to drive your own vehicle? Our drivers meet you and drive your car.",
       href: "/services/drive-my-car",
       ctaText: "Learn More",
       ctaHref: "/services/drive-my-car",
@@ -55,7 +55,7 @@ export default function HomePage() {
           <p className="mt-6 text-base sm:text-lg lg:text-xl text-slate-200/95 max-w-2xl">
             <BlurText
               as="span"
-              text="From chauffeur-driven rentals to drive-my-car services and full-time driver placement. Safe, reliable, and professional transportation tailored to your needs."
+              text="From premium rentals to drive-my-car services and full-time driver placement. Safe, reliable, and professional transportation tailored to your needs."
               animateBy="words"
               direction="top"
               delay={24}

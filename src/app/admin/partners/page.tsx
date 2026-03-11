@@ -4,9 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { AlertCircle, Building2, Check, Loader2, X } from "lucide-react";
+import {
+  AlertCircle,
+  Building2,
+  Check,
+  Download,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Loader2,
+  X,
+} from "lucide-react";
 import {
   ActionModal,
+  Modal,
   Select,
   SelectContent,
   SelectItem,
@@ -54,6 +65,79 @@ interface PartnerAccount {
   suspensionReason?: string | null;
 }
 
+function maskSecret(raw: unknown): string {
+  const s = String(raw || "").trim();
+  if (!s) return "—";
+  if (s.length <= 4) return "****";
+  return `****${s.slice(-4)}`;
+}
+
+function maskIdLike(raw: unknown): string {
+  const s = String(raw || "").trim();
+  if (!s) return "—";
+  if (s.length <= 4) return "****";
+  return `${s.slice(0, 2)}***${s.slice(-2)}`;
+}
+
+function safeJsonPreview(input: unknown, max = 6000): string {
+  try {
+    const raw = JSON.stringify(input, null, 2);
+    if (raw.length <= max) return raw;
+    return `${raw.slice(0, max)}\n…`;
+  } catch {
+    return "";
+  }
+}
+
+function extractDocumentUrls(
+  input: unknown,
+): Array<{ label: string; url: string }> {
+  const results: Array<{ label: string; url: string }> = [];
+  const seen = new Set<string>();
+
+  const isDocUrl = (s: string) =>
+    s.startsWith("/api/files/") ||
+    s.startsWith("https://res.cloudinary.com/") ||
+    s.startsWith("http://res.cloudinary.com/") ||
+    s.startsWith("https://") ||
+    s.startsWith("http://");
+
+  const walk = (val: unknown, path: string[], depth: number) => {
+    if (results.length >= 40) return;
+    if (depth > 6) return;
+
+    if (typeof val === "string") {
+      const url = val.trim();
+      if (url && isDocUrl(url) && !seen.has(url)) {
+        seen.add(url);
+        results.push({ label: path.join(".") || "document", url });
+      }
+      return;
+    }
+
+    if (!val || typeof val !== "object") return;
+    if (val instanceof Date) return;
+
+    if (Array.isArray(val)) {
+      for (let i = 0; i < val.length; i++) {
+        walk(val[i], [...path, String(i)], depth + 1);
+      }
+      return;
+    }
+
+    const obj = val as Record<string, unknown>;
+    for (const [k, v] of Object.entries(obj)) {
+      if (k === "payload") continue;
+      walk(v, [...path, k], depth + 1);
+    }
+  };
+
+  walk(input, [], 0);
+
+  results.sort((a, b) => a.label.localeCompare(b.label));
+  return results;
+}
+
 export default function AdminPartnersPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"applications" | "partners">("applications");
@@ -74,6 +158,124 @@ export default function AdminPartnersPage() {
     action: "reject" | "suspend";
   } | null>(null);
   const [actionReason, setActionReason] = useState("");
+
+  const [detailModal, setDetailModal] = useState<{
+    kind: "application" | "partner";
+    id: string;
+  } | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<any | null>(null);
+  const [showSensitive, setShowSensitive] = useState(false);
+
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerTitle, setViewerTitle] = useState("");
+  const [viewerResolvedUrl, setViewerResolvedUrl] = useState("");
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerError, setViewerError] = useState<string | null>(null);
+  const [viewerKind, setViewerKind] = useState<"pdf" | "image" | "other">(
+    "other",
+  );
+
+  const closeViewer = () => {
+    setViewerOpen(false);
+    setViewerTitle("");
+    setViewerResolvedUrl("");
+    setViewerError(null);
+    setViewerLoading(false);
+    setViewerKind("other");
+  };
+
+  const openDocument = async (key: string, rawUrl: string) => {
+    try {
+      setError(null);
+      setViewerTitle(key);
+      setViewerOpen(true);
+      setViewerResolvedUrl("");
+      setViewerError(null);
+      setViewerLoading(true);
+      setViewerKind("other");
+
+      const user = auth.currentUser;
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      const token = await user.getIdToken();
+
+      const base = String(rawUrl || "").split("?")[0];
+      if (base.startsWith("/api/files/")) {
+        const res = await fetch(`${base}?resolve=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j?.error || "Failed to open document");
+        const resolved = typeof j?.url === "string" ? j.url : "";
+        if (!resolved) throw new Error("Failed to open document");
+
+        const kindFromApi =
+          j?.kind === "pdf" || j?.kind === "image" || j?.kind === "other"
+            ? j.kind
+            : null;
+        if (kindFromApi) {
+          setViewerKind(kindFromApi);
+        } else {
+          const isPdf = /\.pdf(\?|$)/i.test(resolved);
+          const isImg = /\.(png|jpe?g|webp|gif|bmp|svg)(\?|$)/i.test(resolved);
+          setViewerKind(isPdf ? "pdf" : isImg ? "image" : "other");
+        }
+
+        setViewerTitle(key);
+        setViewerResolvedUrl(resolved);
+        return;
+      }
+
+      throw new Error(
+        "This document link is not compatible. Please ask the partner to re-upload the document.",
+      );
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unable to open document.";
+      setError(msg);
+      setViewerError(msg);
+    } finally {
+      setViewerLoading(false);
+    }
+  };
+
+  const openPartnerDetails = async (
+    kind: "application" | "partner",
+    id: string,
+  ) => {
+    try {
+      setDetailModal({ kind, id });
+      setDetail(null);
+      setDetailError(null);
+      setShowSensitive(false);
+      setDetailLoading(true);
+
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not authenticated");
+      const token = await user.getIdToken();
+
+      const res = await fetch(
+        `/api/admin/partners/applications/${encodeURIComponent(id)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        },
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok)
+        throw new Error(j?.error || "Failed to load partner details");
+      setDetail(j || null);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to load details";
+      setDetailError(msg);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const fetchApplications = async (token: string) => {
     const res = await fetch("/api/admin/partners/applications", {
@@ -555,6 +757,16 @@ export default function AdminPartnersPage() {
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button
+                                onClick={() =>
+                                  void openPartnerDetails("application", a.id)
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white/70 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </button>
+                              <button
                                 onClick={() => handleAction(a.id, "approve")}
                                 disabled={!isPending || busy}
                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
@@ -666,6 +878,16 @@ export default function AdminPartnersPage() {
 
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() =>
+                                void openPartnerDetails("partner", p.id)
+                              }
+                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-white/70 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                              title="View details"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </button>
                             {isApproved ? (
                               <button
                                 onClick={() => {
@@ -751,6 +973,344 @@ export default function AdminPartnersPage() {
           return handlePartnerAction(actionModal.id, "suspend", actionReason);
         }}
       />
+
+      <Modal
+        isOpen={Boolean(detailModal)}
+        onClose={() => {
+          setDetailModal(null);
+          setDetail(null);
+          setDetailError(null);
+          setShowSensitive(false);
+        }}
+        title={
+          detailModal?.kind === "partner"
+            ? "Partner Details"
+            : "Partner Application Details"
+        }
+        className="max-w-4xl"
+      >
+        {detailLoading ? (
+          <div className="p-6 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          </div>
+        ) : detailError ? (
+          <div className="p-6">
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300">
+              {detailError}
+            </div>
+          </div>
+        ) : detail ? (
+          <div className="p-6 space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                  {String(detail?.partnerType || "") === "business"
+                    ? String(detail?.businessName || "").trim() || "Partner"
+                    : `${String(detail?.firstName || "").trim()} ${String(detail?.lastName || "").trim()}`.trim() ||
+                      "Partner"}
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 break-all">
+                  {String(detail?.email || "").trim() || "—"}
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {String(detail?.phoneNumber || "").trim() || "—"}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSensitive((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/40 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              >
+                {showSensitive ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                {showSensitive ? "Hide sensitive" : "Show sensitive"}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Partner Type
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white capitalize">
+                  {String(detail?.partnerType || "individual")}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  CAC Number
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white font-mono">
+                  {String(detail?.cacNumber || "").trim() || "—"}
+                </div>
+              </div>
+            </div>
+
+            {String(detail?.partnerType || "") === "individual" ? (
+              <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  BVN / NIN
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white font-mono">
+                  {showSensitive
+                    ? String(detail?.bvnOrNin || "").trim() || "—"
+                    : maskIdLike(detail?.bvnOrNin)}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Director Name
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                    {String(detail?.directorName || "").trim() || "—"}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Director Email
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white break-all">
+                    {String(detail?.directorEmail || "").trim() || "—"}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Director Phone
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                    {String(detail?.directorPhone || "").trim() || "—"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Payout Details
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    Bank
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900 dark:text-white">
+                    {String(detail?.payout?.bankName || "").trim() || "—"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    Account Name
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900 dark:text-white">
+                    {String(detail?.payout?.accountName || "").trim() || "—"}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    Account Number
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900 dark:text-white font-mono">
+                    {showSensitive
+                      ? String(detail?.payout?.accountNumber || "").trim() ||
+                        "—"
+                      : maskSecret(detail?.payout?.accountNumber)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                KYC
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    Overall
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900 dark:text-white">
+                    {String(detail?.kyc?.overallStatus || "pending")}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    CAC
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900 dark:text-white">
+                    {String(detail?.kyc?.cac?.status || "pending")}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    ID / Director
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900 dark:text-white">
+                    {String(
+                      detail?.partnerType === "business"
+                        ? detail?.kyc?.director?.status || "pending"
+                        : detail?.kyc?.individualId?.status || "pending",
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-300">
+                <details className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-950/30 p-3">
+                  <summary className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200">
+                    CAC details
+                  </summary>
+                  <pre className="mt-3 whitespace-pre-wrap break-words text-[11px] text-slate-700 dark:text-slate-200">
+                    {safeJsonPreview(detail?.kyc?.cac || null)}
+                  </pre>
+                </details>
+                <details className="rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-950/30 p-3">
+                  <summary className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200">
+                    ID / Director details
+                  </summary>
+                  <pre className="mt-3 whitespace-pre-wrap break-words text-[11px] text-slate-700 dark:text-slate-200">
+                    {safeJsonPreview(
+                      detail?.partnerType === "business"
+                        ? detail?.kyc?.director || null
+                        : detail?.kyc?.individualId || null,
+                    )}
+                  </pre>
+                </details>
+              </div>
+            </div>
+
+            {(() => {
+              const docsRaw: any = detail?.documents;
+              const items: Array<{ label: string; url: string }> = [];
+
+              if (Array.isArray(docsRaw)) {
+                for (const d of docsRaw) {
+                  const label =
+                    String(d?.type || d?.key || "Document").trim() ||
+                    "Document";
+                  const url = String(d?.url || d?.value || "").trim();
+                  if (url) items.push({ label, url });
+                }
+              } else if (docsRaw && typeof docsRaw === "object") {
+                for (const [k, v] of Object.entries(docsRaw)) {
+                  const maybeUrl =
+                    typeof (v as any)?.url === "string" ? (v as any).url : v;
+                  const url = String(maybeUrl || "").trim();
+                  if (url) items.push({ label: k, url });
+                }
+              }
+
+              const discovered = extractDocumentUrls(detail);
+              for (const d of discovered) {
+                if (!items.some((x) => x.url === d.url)) items.push(d);
+              }
+
+              if (items.length === 0) return null;
+              return (
+                <div className="rounded-2xl bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-4">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Uploaded Documents
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {items.map((d) => (
+                      <div
+                        key={`${d.label}-${d.url}`}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-950/30 p-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                            {d.label}
+                          </div>
+                          <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            {d.url}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void openDocument(d.label, d.url)}
+                            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                          >
+                            <Eye className="h-4 w-4" />
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : (
+          <div className="p-6 text-sm text-slate-600 dark:text-slate-300">
+            No details.
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={viewerOpen}
+        onClose={closeViewer}
+        title={viewerTitle || "Document"}
+        className="max-w-5xl"
+      >
+        <div className="p-6">
+          {viewerLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+            </div>
+          ) : viewerError ? (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300">
+              {viewerError}
+            </div>
+          ) : viewerResolvedUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-end">
+                <a
+                  href={`${viewerResolvedUrl}${viewerResolvedUrl.includes("?") ? "&" : "?"}download=1`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </a>
+              </div>
+              {viewerKind === "image" ? (
+                <img
+                  src={viewerResolvedUrl}
+                  alt={viewerTitle}
+                  className="w-full max-h-[70vh] object-contain rounded-xl bg-white/60 dark:bg-slate-900/40"
+                />
+              ) : viewerKind === "pdf" ? (
+                <iframe
+                  src={viewerResolvedUrl}
+                  className="w-full h-[70vh] rounded-xl bg-white/60 dark:bg-slate-900/40"
+                />
+              ) : (
+                <a
+                  href={viewerResolvedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open
+                </a>
+              )}
+            </div>
+          ) : (
+            <div className="text-sm text-slate-600 dark:text-slate-300">
+              No document.
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

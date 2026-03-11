@@ -22,7 +22,7 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "RideOn Nigeria | Safe, Reliable, Professional Mobility",
   description:
-    "Premium chauffeur services, drive-my-car solutions, and full-time driver placement across Nigeria. Safe, reliable transportation for individuals and businesses.",
+    "Premium rentals, drive-my-car solutions, and full-time driver placement across Nigeria. Safe, reliable transportation for individuals and businesses.",
   icons: {
     icon: [
       {

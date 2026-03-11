@@ -7,7 +7,7 @@ import RevealOnScroll from "../../../components/shared/RevealOnScroll";
 export const metadata: Metadata = {
   title: "Partner With Us | RideOn Nigeria",
   description:
-    "List your vehicles with RideOn and earn reliably through our professional marketplace for chauffeur-driven rentals across Nigeria. Join our trusted partner network.",
+    "List your vehicles with RideOn and earn reliably through our professional premium rentals marketplace across Nigeria. Join our trusted partner network.",
 };
 
 export default function PartnerWithUsPage() {
@@ -37,7 +37,7 @@ export default function PartnerWithUsPage() {
           <BlurText
             as="p"
             className="mt-4 text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto"
-            text="List your vehicles, earn reliably, and grow with a professional marketplace for chauffeur-driven rentals across Nigeria."
+            text="List your vehicles, earn reliably, and grow with a professional premium rentals marketplace across Nigeria."
             animateBy="words"
             direction="top"
             delay={24}

@@ -6,7 +6,7 @@ import { BlurText } from "../../../../components";
 export const metadata: Metadata = {
   title: "Drive My Car Service | RideOn Nigeria",
   description:
-    "Professional chauffeurs to drive your own vehicle. Our drivers meet you at your location and safely transport you in your car wherever you need to go.",
+    "Professional drivers to drive your own vehicle. Our drivers meet you at your location and safely transport you in your car wherever you need to go.",
 };
 
 export default function DriveMyCarPage() {
@@ -15,7 +15,7 @@ export default function DriveMyCarPage() {
       icon: Shield,
       title: "Vetted Professionals",
       description:
-        "All chauffeurs undergo thorough background checks and have verified driving credentials.",
+        "All drivers undergo thorough background checks and have verified driving credentials.",
     },
     {
       icon: MapPin,
@@ -79,7 +79,7 @@ export default function DriveMyCarPage() {
             <p className="mt-6 text-lg sm:text-xl text-slate-600 dark:text-slate-400">
               <BlurText
                 as="span"
-                text="Need someone to drive your own vehicle? Our professional chauffeurs meet you at your location and safely drive your car wherever you need to go."
+                text="Need someone to drive your own vehicle? Our professional drivers meet you at your location and safely drive your car wherever you need to go."
                 animateBy="words"
                 direction="top"
                 delay={24}
@@ -150,13 +150,13 @@ export default function DriveMyCarPage() {
                 step: 2,
                 title: "Driver Assigned",
                 description:
-                  "We match you with a professional chauffeur and confirm details.",
+                  "We match you with a professional driver and confirm details.",
               },
               {
                 step: 3,
                 title: "Meet Your Driver",
                 description:
-                  "The chauffeur arrives at your location at the scheduled time.",
+                  "The driver arrives at your location at the scheduled time.",
               },
               {
                 step: 4,
@@ -323,7 +323,7 @@ export default function DriveMyCarPage() {
             <p className="text-lg text-green-100 mb-8">
               <BlurText
                 as="span"
-                text="Request a professional chauffeur in just a few taps."
+                text="Request a professional driver in just a few taps."
                 animateBy="words"
                 direction="top"
                 delay={24}

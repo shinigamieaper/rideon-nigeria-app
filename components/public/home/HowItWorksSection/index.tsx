@@ -53,11 +53,11 @@ const steps: Step[] = [
   },
   {
     id: 4,
-    title: "Enjoy Your Chauffeur Service",
+    title: "Enjoy Your Ride",
     description:
-      "Your professional chauffeur arrives with your vehicle at the scheduled time. Sit back, relax, and enjoy your chauffeur-driven journey.",
+      "Your professional driver arrives with your vehicle at the scheduled time. Sit back, relax, and enjoy your journey.",
     bullets: [
-      "Professional chauffeur arrives on schedule",
+      "Professional driver arrives on schedule",
       "Comfortable, safe journey",
       "Support available if you need help",
     ],
@@ -117,7 +117,7 @@ export default function HowItWorksSection({
           <BlurText
             as="p"
             className="mt-4 text-lg text-slate-600 dark:text-slate-400"
-            text="Renting a chauffeur-driven car has never been easier. Four simple steps to your next reservation."
+            text="Booking a premium rental has never been easier. Four simple steps to your next reservation."
             animateBy="words"
             direction="top"
             delay={24}

@@ -18,8 +18,8 @@ export default function SafetyPage() {
       icon: (
         <ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
       ),
-      title: "Customer & Chauffeur Verification",
-      desc: "We verify every professional chauffeur and customer profile on our platform to ensure a trusted community. Know who will be driving you before your reservation begins.",
+      title: "Customer & Driver Verification",
+      desc: "We verify every professional driver and customer profile on our platform to ensure a trusted community. Know who will be driving you before your reservation begins.",
     },
     {
       icon: <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />,

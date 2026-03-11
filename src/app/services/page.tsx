@@ -6,7 +6,7 @@ import { BlurText } from "../../../components";
 export const metadata: Metadata = {
   title: "Our Services | RideOn Nigeria",
   description:
-    "Explore RideOn's premium mobility solutions: chauffeur-driven rentals, drive-my-car services, and full-time driver placement across Nigeria.",
+    "Explore RideOn's premium mobility solutions: premium rentals, drive-my-car services, and full-time driver placement across Nigeria.",
 };
 
 export default function ServicesPage() {
@@ -14,9 +14,9 @@ export default function ServicesPage() {
     {
       id: "pre-booked-rides",
       icon: Car,
-      title: "Chauffeur-Driven Rentals",
+      title: "Premium Rentals",
       description:
-        "Reserve premium vehicles with professional chauffeurs for daily or multi-day journeys. Browse our fleet, schedule your pickup, and enjoy safe, reliable transportation.",
+        "Reserve premium vehicles with professional drivers for daily or multi-day journeys. Browse our fleet, schedule your pickup, and enjoy safe, reliable transportation.",
       href: "/services/pre-booked-rides",
       ctaText: "Learn More",
       ctaHref: "/services/pre-booked-rides",
@@ -27,7 +27,7 @@ export default function ServicesPage() {
       icon: UserCheck,
       title: "Drive My Car",
       description:
-        "Need someone to drive your own vehicle? Our professional chauffeurs meet you at your location and safely drive your car wherever you need to go.",
+        "Need someone to drive your own vehicle? Our professional drivers meet you at your location and safely drive your car wherever you need to go.",
       href: "/services/drive-my-car",
       ctaText: "Learn More",
       ctaHref: "/services/drive-my-car",

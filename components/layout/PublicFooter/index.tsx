@@ -138,7 +138,7 @@ export default function PublicFooter() {
                     <BlurText
                       as="span"
                       className="inline-block"
-                      text="Chauffeur-Driven Rentals"
+                      text="Premium Rentals"
                       animateBy="letters"
                       direction="top"
                       delay={12}

@@ -65,6 +65,8 @@ function getOwnerUidFromCloudinaryPublicId(publicId: string): string | null {
   if (m?.[1]) return m[1];
   m = pid.match(/^drivers\/([^/]+)\//);
   if (m?.[1]) return m[1];
+  m = pid.match(/^partners\/([^/]+)\//);
+  if (m?.[1]) return m[1];
   return null;
 }
 

@@ -63,7 +63,7 @@ export default function RegisterPage() {
               <BlurText
                 as="p"
                 className="text-gray-600 dark:text-slate-400 mt-2 text-base"
-                text="Create a customer account to book chauffeur-driven rentals, hire a driver to drive your car, or find a full-time driver."
+                text="Create a customer account to book premium rentals, hire a driver to drive your car, or find a full-time driver."
                 animateBy="words"
                 direction="top"
                 delay={24}
