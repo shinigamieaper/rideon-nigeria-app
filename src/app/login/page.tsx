@@ -19,6 +19,28 @@ import RevealOnScroll from "../../../components/shared/RevealOnScroll";
 
 const EMAIL_VERIFY_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
 
+function safeNextPath(raw: string | null | undefined): string {
+  const val = (raw || "").trim();
+  if (!val) return "/app/dashboard";
+
+  if (val.startsWith("/") && !val.startsWith("//") && !val.startsWith("/\\"))
+    return val;
+
+  try {
+    const u = new URL(val);
+    if (typeof window !== "undefined" && u.origin === window.location.origin) {
+      const p = `${u.pathname}${u.search}${u.hash}`;
+      return p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\")
+        ? p
+        : "/app/dashboard";
+    }
+  } catch {
+    // ignore
+  }
+
+  return "/app/dashboard";
+}
+
 function isAllowlistedNext(nextAfter: string | null): boolean {
   const n = (nextAfter || "").trim();
   if (!n) return false;
@@ -38,9 +60,7 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextAfter = searchParams.get("next");
-  const nextSafe = isAllowlistedNext(nextAfter)
-    ? (nextAfter as string)
-    : "/app/dashboard";
+  const nextSafe = safeNextPath(nextAfter);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -77,7 +97,7 @@ function LoginPageContent() {
       cancelled = true;
       unsub();
     };
-  }, [nextAfter, router]);
+  }, [nextSafe, router]);
 
   useEffect(() => {
     let cancelled = false;

@@ -30,7 +30,9 @@ export default function DriverConversationPage({ params }: PageProps) {
         redirectTimer = setTimeout(() => {
           if (cancelled) return;
           if (!auth.currentUser) {
-            router.replace("/login?next=/driver/messages");
+            router.replace(
+              `/login?next=${encodeURIComponent(`/driver/messages/${encodeURIComponent(conversationId)}`)}`,
+            );
           }
         }, 1500);
         return;

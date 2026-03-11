@@ -143,7 +143,9 @@ export default function FullTimeDriverLayout({
 
         let res = await fetchMe(token);
         if (res.status === 401) {
-          router.replace("/login");
+          router.replace(
+            `/login?next=${encodeURIComponent(pathname || "/full-time-driver")}`,
+          );
           return;
         }
 

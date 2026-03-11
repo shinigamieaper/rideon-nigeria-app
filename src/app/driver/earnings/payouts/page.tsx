@@ -27,6 +27,7 @@ async function getAuthedUid(): Promise<{ uid: string }> {
 
   if (!decoded) {
     const h = await headers();
+    const requestedPath = h.get("x-pathname") || "/driver/earnings/payouts";
     const authHeader = h.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length)
@@ -35,7 +36,7 @@ async function getAuthedUid(): Promise<{ uid: string }> {
       console.warn(
         "[earnings/payouts] No session cookie and no Bearer token - redirecting to login",
       );
-      redirect(`/login?next=${encodeURIComponent("/driver/earnings/payouts")}`);
+      redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
     }
     try {
       decoded = await adminAuth.verifyIdToken(token);
@@ -45,15 +46,15 @@ async function getAuthedUid(): Promise<{ uid: string }> {
         "[earnings/payouts] Bearer token verification failed:",
         err?.code || err?.message || err,
       );
-      redirect(`/login?next=${encodeURIComponent("/driver/earnings/payouts")}`);
+      redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
     }
   }
 
   const role = (decoded?.role ?? decoded?.claims?.role) as string | undefined;
   if (role !== "driver") {
-    redirect(
-      `/register/driver?next=${encodeURIComponent("/driver/earnings/payouts")}`,
-    );
+    const h = await headers();
+    const requestedPath = h.get("x-pathname") || "/driver/earnings/payouts";
+    redirect(`/register/driver?next=${encodeURIComponent(requestedPath)}`);
   }
 
   return { uid: decoded.uid as string };

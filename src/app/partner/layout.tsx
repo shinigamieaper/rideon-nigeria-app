@@ -151,7 +151,9 @@ export default function PartnerLayout({
         }
 
         if (res.status === 401) {
-          router.replace("/login");
+          router.replace(
+            `/login?next=${encodeURIComponent(pathname || "/partner")}`,
+          );
           return;
         }
 

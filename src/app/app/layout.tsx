@@ -32,6 +32,7 @@ function withTimeout<T>(
 export default async function Layout({ children }: { children: ReactNode }) {
   const h = await headers();
   const pathname = h.get("x-pathname") || "";
+  const requestedPath = pathname || "/app/dashboard";
   const c = await cookies();
   const session = c.get("rideon_session")?.value || "";
   let decoded: any | null = null;
@@ -45,7 +46,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
       ? authHeader.slice("Bearer ".length)
       : "";
     if (!token) {
-      redirect(`/login?next=${encodeURIComponent("/app/dashboard")}`);
+      redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
     }
     decoded = await withTimeout(
       adminAuth.verifyIdToken(token),
@@ -76,11 +77,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
   if (!role) role = "customer";
 
   if (!uid) {
-    redirect(`/login?next=${encodeURIComponent("/app/dashboard")}`);
+    redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
   }
 
   if (role !== "customer") {
-    redirect(`/register/customer?next=${encodeURIComponent("/app/dashboard")}`);
+    redirect(`/register/customer?next=${encodeURIComponent(requestedPath)}`);
   }
 
   return (

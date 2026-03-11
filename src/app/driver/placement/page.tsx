@@ -37,21 +37,22 @@ async function getAuthedUid(): Promise<{ uid: string }> {
 
   if (!decoded) {
     const h = await headers();
+    const requestedPath = h.get("x-pathname") || "/driver/placement";
     const authHeader = h.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length)
       : "";
     if (!token) {
-      redirect(`/login?next=${encodeURIComponent("/driver/placement")}`);
+      redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
     }
     decoded = await adminAuth.verifyIdToken(token);
   }
 
   const role = (decoded?.role ?? decoded?.claims?.role) as string | undefined;
   if (role !== "driver") {
-    redirect(
-      `/register/driver?next=${encodeURIComponent("/driver/placement")}`,
-    );
+    const h = await headers();
+    const requestedPath = h.get("x-pathname") || "/driver/placement";
+    redirect(`/register/driver?next=${encodeURIComponent(requestedPath)}`);
   }
 
   return { uid: decoded.uid as string };

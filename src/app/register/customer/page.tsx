@@ -12,10 +12,33 @@ import {
 import BlurText from "../../../../components/shared/BlurText";
 import RevealOnScroll from "../../../../components/shared/RevealOnScroll";
 
+function safeNextPath(raw: string | null | undefined): string {
+  const val = (raw || "").trim();
+  if (!val) return "/app/dashboard";
+
+  if (val.startsWith("/") && !val.startsWith("//") && !val.startsWith("/\\"))
+    return val;
+
+  try {
+    const u = new URL(val);
+    if (typeof window !== "undefined" && u.origin === window.location.origin) {
+      const p = `${u.pathname}${u.search}${u.hash}`;
+      return p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\")
+        ? p
+        : "/app/dashboard";
+    }
+  } catch {
+    // ignore
+  }
+
+  return "/app/dashboard";
+}
+
 function CustomerRegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextAfter = searchParams.get("next");
+  const nextSafe = safeNextPath(nextAfter);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -113,17 +136,15 @@ function CustomerRegisterPageContent() {
       try {
         const u = auth.currentUser;
         if (u && !u.emailVerified) {
-          const next = nextAfter || "/app/dashboard";
           const actionCodeSettings = {
-            url: `${window.location.origin}/auth/action?next=${encodeURIComponent(next)}`,
+            url: `${window.location.origin}/auth/action?next=${encodeURIComponent(nextSafe)}`,
             handleCodeInApp: true,
           } as const;
           await sendEmailVerification(u, actionCodeSettings);
         }
       } catch {}
 
-      const next = nextAfter || "/app/dashboard";
-      router.push(`/verify-email?next=${encodeURIComponent(next)}`);
+      router.push(`/verify-email?next=${encodeURIComponent(nextSafe)}`);
     } catch (err: any) {
       const code = err?.code as string | undefined;
       if (code === "auth/email-already-in-use") {
@@ -332,11 +353,7 @@ function CustomerRegisterPageContent() {
           <p className="text-center text-sm text-slate-500 dark:text-slate-400">
             Already have an account?{" "}
             <Link
-              href={
-                nextAfter
-                  ? `/login?next=${encodeURIComponent(nextAfter)}`
-                  : "/login"
-              }
+              href={`/login?next=${encodeURIComponent(nextSafe)}`}
               className="font-medium text-slate-800 dark:text-slate-200 hover:underline"
             >
               Log In

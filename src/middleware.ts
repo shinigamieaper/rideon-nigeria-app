@@ -19,6 +19,11 @@ const APP_EXPIRES_AT_MS = parseExpiryMs(process.env.APP_EXPIRES_AT);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(
+    "x-pathname",
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+  );
 
   const lockoutActive =
     APP_EXPIRES_AT_MS !== null && Date.now() >= APP_EXPIRES_AT_MS;
@@ -104,12 +109,17 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {
   matcher: [
     "/app/:path*",
+    "/admin/:path*",
     "/driver/:path*",
     "/partner/:path*",
     "/full-time-driver/:path*",

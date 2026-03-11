@@ -46,6 +46,8 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
+  const h = await headers();
+  const requestedPath = h.get("x-pathname") || "/admin";
   const expiresAtMs = parseExpiryMs(process.env.APP_EXPIRES_AT);
   const appExpired = expiresAtMs !== null && Date.now() >= expiresAtMs;
 
@@ -58,13 +60,12 @@ export default async function AdminLayout({
   }
 
   if (!decoded) {
-    const h = await headers();
     const authHeader = h.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length)
       : "";
     if (!token) {
-      redirect(`/login?next=${encodeURIComponent("/admin")}`);
+      redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
     }
     try {
       decoded = await withTimeout(
@@ -73,7 +74,7 @@ export default async function AdminLayout({
         "[admin/layout] verifyIdToken",
       );
     } catch {
-      redirect(`/login?next=${encodeURIComponent("/admin")}`);
+      redirect(`/login?next=${encodeURIComponent(requestedPath)}`);
     }
   }
 
@@ -87,7 +88,7 @@ export default async function AdminLayout({
     decoded?.email_verified === true ||
     decoded?.claims?.email_verified === true;
   if (!emailVerified) {
-    redirect(`/verify-email?next=${encodeURIComponent("/admin")}`);
+    redirect(`/verify-email?next=${encodeURIComponent(requestedPath)}`);
   }
 
   const adminRole =

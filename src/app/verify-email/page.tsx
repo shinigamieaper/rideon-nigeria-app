@@ -17,13 +17,16 @@ function safeNextPath(raw: string | null | undefined): string {
   const val = (raw || "").trim();
   if (!val) return "/app/dashboard";
 
-  if (val.startsWith("/")) return val;
+  if (val.startsWith("/") && !val.startsWith("//") && !val.startsWith("/\\"))
+    return val;
 
   try {
     const u = new URL(val);
     if (typeof window !== "undefined" && u.origin === window.location.origin) {
       const p = `${u.pathname}${u.search}${u.hash}`;
-      return p.startsWith("/") ? p : "/app/dashboard";
+      return p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\")
+        ? p
+        : "/app/dashboard";
     }
   } catch {
     // ignore
