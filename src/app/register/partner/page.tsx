@@ -6,7 +6,6 @@ import { Check, CheckCircle2 } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import {
   createUserWithEmailAndPassword,
-  fetchSignInMethodsForEmail,
   onAuthStateChanged,
   sendPasswordResetEmail,
 } from "firebase/auth";
@@ -174,7 +173,13 @@ export default function PartnerRegisterPage() {
           );
           user = cred.user;
           try {
-            await sendPasswordResetEmail(auth, email);
+            const actionCodeSettings = {
+              url: `${window.location.origin}/reset-password/reset`,
+              handleCodeInApp: true,
+            } as const;
+            void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+              () => {},
+            );
           } catch (e) {
             console.warn("[PartnerRegister] sendPasswordResetEmail failed", e);
           }
@@ -185,11 +190,18 @@ export default function PartnerRegisterPage() {
               : undefined;
           if (code === "auth/email-already-in-use") {
             try {
-              await fetchSignInMethodsForEmail(auth, email);
-              await sendPasswordResetEmail(auth, email);
+              const actionCodeSettings = {
+                url: `${window.location.origin}/reset-password/reset`,
+                handleCodeInApp: true,
+              } as const;
+              void sendPasswordResetEmail(
+                auth,
+                email,
+                actionCodeSettings,
+              ).catch(() => {});
             } catch (se) {
               console.warn(
-                "[PartnerRegister] fetchSignInMethods/reset failed",
+                "[PartnerRegister] sendPasswordResetEmail failed",
                 se,
               );
             }
@@ -498,6 +510,10 @@ export default function PartnerRegisterPage() {
                   }
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition text-sm"
                 />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  You’ll set your password via a link sent to your email after
+                  you submit.
+                </p>
 
                 <input
                   type="tel"

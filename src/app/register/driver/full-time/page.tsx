@@ -6,7 +6,6 @@ import { Check, CheckCircle2, UploadCloud } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import {
   createUserWithEmailAndPassword,
-  fetchSignInMethodsForEmail,
   onAuthStateChanged,
   sendPasswordResetEmail,
 } from "firebase/auth";
@@ -261,12 +260,62 @@ export default function FullTimeDriverRegisterPage() {
     });
   };
 
+  const ensureUploadUser = async () => {
+    const email = String(formData.email || "")
+      .trim()
+      .toLowerCase();
+    const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    if (!emailOk) {
+      throw new Error("Please enter a valid email address first.");
+    }
+
+    let user = auth.currentUser;
+    if (user && user.email?.toLowerCase() === email) return user;
+
+    try {
+      const password = cryptoRandomString(16);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      user = cred.user;
+      const actionCodeSettings = {
+        url: `${window.location.origin}/reset-password/reset`,
+        handleCodeInApp: true,
+      } as const;
+      void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+        () => {},
+      );
+      return user;
+    } catch (e: unknown) {
+      const code =
+        typeof e === "object" && e && "code" in e
+          ? String((e as { code?: string }).code)
+          : undefined;
+
+      if (code === "auth/email-already-in-use") {
+        const actionCodeSettings = {
+          url: `${window.location.origin}/reset-password/reset`,
+          handleCodeInApp: true,
+        } as const;
+        void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+          () => {},
+        );
+        throw new Error(
+          "This email already has an account. Please sign in, then return to continue registration. (We sent a password reset link if needed.)",
+        );
+      }
+
+      if (code === "auth/invalid-email") {
+        throw new Error("Please enter a valid email address.");
+      }
+
+      throw e;
+    }
+  };
+
   const uploadToCloudinary = async (
     key: keyof FilesState,
     file: File,
   ): Promise<string> => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Unauthorized");
+    const user = await ensureUploadUser();
 
     const token = await user.getIdToken();
     const fd = new FormData();
@@ -288,27 +337,72 @@ export default function FullTimeDriverRegisterPage() {
   };
 
   const handleFileChange = (key: keyof FilesState, file: File | null) => {
+    if (!file) {
+      setError(null);
+      setFormData((prev) => {
+        const updates: Partial<FormDataState> = {};
+        if (key === "driversLicense") updates.driversLicenseUrl = "";
+        if (key === "governmentId") updates.governmentIdUrl = "";
+        if (key === "lasdriCard") updates.lasdriCardUrl = "";
+        return {
+          ...prev,
+          ...updates,
+          files: { ...prev.files, [key]: null },
+          fileNames: { ...prev.fileNames, [key]: "No file selected." },
+        } as FormDataState;
+      });
+      return;
+    }
+
     setError(null);
+
+    const MAX_MB = 10;
+    const MAX_BYTES = MAX_MB * 1024 * 1024;
+    const ALLOWED_TYPES = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif",
+      "application/pdf",
+      "application/octet-stream",
+    ];
+    const ALLOWED_EXTS = ["jpg", "jpeg", "png", "webp", "pdf", "heic", "heif"];
+    const ext = String(file.name.split(".").pop() || "").toLowerCase();
+
+    if (file.size > MAX_BYTES) {
+      setError(
+        `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())} is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${MAX_MB}MB per file.`,
+      );
+      setFormData((prev) => ({
+        ...prev,
+        files: { ...prev.files, [key]: null },
+        fileNames: { ...prev.fileNames, [key]: "File too large" },
+      }));
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type) && !ALLOWED_EXTS.includes(ext)) {
+      setError(
+        `${key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())} must be a PDF or an image (JPG/PNG/WebP).`,
+      );
+      setFormData((prev) => ({
+        ...prev,
+        files: { ...prev.files, [key]: null },
+        fileNames: { ...prev.fileNames, [key]: "Invalid file type" },
+      }));
+      return;
+    }
 
     setFormData((prev) => ({
       ...prev,
       files: { ...prev.files, [key]: file },
       fileNames: {
         ...prev.fileNames,
-        [key]: file ? "Uploading… " + file.name : "No file selected.",
+        [key]: "Uploading… " + file.name,
       },
     }));
-
-    if (!file) {
-      setFormData((prev) => {
-        const updates: Partial<FormDataState> = {};
-        if (key === "driversLicense") updates.driversLicenseUrl = "";
-        if (key === "governmentId") updates.governmentIdUrl = "";
-        if (key === "lasdriCard") updates.lasdriCardUrl = "";
-        return { ...prev, ...updates } as FormDataState;
-      });
-      return;
-    }
 
     setDocUploading((s) => ({ ...s, [key]: true }));
     uploadToCloudinary(key, file)
@@ -539,7 +633,13 @@ export default function FullTimeDriverRegisterPage() {
           );
           user = cred.user;
           try {
-            await sendPasswordResetEmail(auth, email);
+            const actionCodeSettings = {
+              url: `${window.location.origin}/reset-password/reset`,
+              handleCodeInApp: true,
+            } as const;
+            void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+              () => {},
+            );
           } catch (e) {
             console.warn(
               "[FullTimeDriverRegister] sendPasswordResetEmail failed",
@@ -553,11 +653,18 @@ export default function FullTimeDriverRegisterPage() {
               : undefined;
           if (code === "auth/email-already-in-use") {
             try {
-              await fetchSignInMethodsForEmail(auth, email);
-              await sendPasswordResetEmail(auth, email);
+              const actionCodeSettings = {
+                url: `${window.location.origin}/reset-password/reset`,
+                handleCodeInApp: true,
+              } as const;
+              void sendPasswordResetEmail(
+                auth,
+                email,
+                actionCodeSettings,
+              ).catch(() => {});
             } catch (se) {
               console.warn(
-                "[FullTimeDriverRegister] fetchSignInMethods/reset failed",
+                "[FullTimeDriverRegister] sendPasswordResetEmail failed",
                 se,
               );
             }
@@ -786,6 +893,10 @@ export default function FullTimeDriverRegisterPage() {
                   onChange={(e) => handleInput(e, ["email"])}
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition text-sm"
                 />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  You’ll set your password via a link sent to your email after
+                  you submit.
+                </p>
                 <input
                   type="tel"
                   placeholder="Phone Number"
@@ -1146,6 +1257,9 @@ export default function FullTimeDriverRegisterPage() {
                   direction="top"
                   delay={24}
                 />
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  Max 10MB per file. PDF or image (JPG/PNG/WebP/HEIC).
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -1168,6 +1282,7 @@ export default function FullTimeDriverRegisterPage() {
                     Upload
                     <input
                       type="file"
+                      accept="image/*,application/pdf"
                       required
                       className="sr-only"
                       onChange={(e) =>
@@ -1199,6 +1314,7 @@ export default function FullTimeDriverRegisterPage() {
                     Upload
                     <input
                       type="file"
+                      accept="image/*,application/pdf"
                       required
                       className="sr-only"
                       onChange={(e) =>
@@ -1230,6 +1346,7 @@ export default function FullTimeDriverRegisterPage() {
                     Upload
                     <input
                       type="file"
+                      accept="image/*,application/pdf"
                       className="sr-only"
                       onChange={(e) =>
                         handleFileChange(

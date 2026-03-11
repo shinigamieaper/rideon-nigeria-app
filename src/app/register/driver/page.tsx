@@ -9,7 +9,6 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 // Firebase Storage removed (migrated to MongoDB GridFS via API uploads)
 import BlurText from "../../../../components/shared/BlurText";
@@ -227,11 +226,13 @@ export function OnDemandDriverRegisterPage() {
       const password = cryptoRandomString(16);
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       user = cred.user;
-      try {
-        await sendPasswordResetEmail(auth, email);
-      } catch {
-        // ignore
-      }
+      const actionCodeSettings = {
+        url: `${window.location.origin}/reset-password/reset`,
+        handleCodeInApp: true,
+      } as const;
+      void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+        () => {},
+      );
       return user;
     } catch (e: unknown) {
       const code =
@@ -240,12 +241,13 @@ export function OnDemandDriverRegisterPage() {
           : undefined;
 
       if (code === "auth/email-already-in-use") {
-        try {
-          await fetchSignInMethodsForEmail(auth, email);
-          await sendPasswordResetEmail(auth, email);
-        } catch {
-          // ignore
-        }
+        const actionCodeSettings = {
+          url: `${window.location.origin}/reset-password/reset`,
+          handleCodeInApp: true,
+        } as const;
+        void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+          () => {},
+        );
         throw new Error(
           "This email already has an account. Please sign in, then return to continue registration. (We sent a password reset link if needed.)",
         );
@@ -560,11 +562,15 @@ export function OnDemandDriverRegisterPage() {
           user = cred.user;
           console.log("[DriverRegister] user created", user.uid);
           // Send a password reset email so the driver can set their own password
-          try {
-            await sendPasswordResetEmail(auth, email);
-          } catch (e) {
-            console.warn("[DriverRegister] sendPasswordResetEmail failed", e);
-          }
+          const actionCodeSettings = {
+            url: `${window.location.origin}/reset-password/reset`,
+            handleCodeInApp: true,
+          } as const;
+          void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+            (e) => {
+              console.warn("[DriverRegister] sendPasswordResetEmail failed", e);
+            },
+          );
         } catch (e: unknown) {
           const code =
             typeof e === "object" && e && "code" in e
@@ -574,15 +580,18 @@ export function OnDemandDriverRegisterPage() {
             console.warn(
               "[DriverRegister] email already in use; sending password reset",
             );
-            try {
-              await fetchSignInMethodsForEmail(auth, email);
-              await sendPasswordResetEmail(auth, email);
-            } catch (se) {
-              console.warn(
-                "[DriverRegister] fetchSignInMethods/reset failed",
-                se,
-              );
-            }
+            const actionCodeSettings = {
+              url: `${window.location.origin}/reset-password/reset`,
+              handleCodeInApp: true,
+            } as const;
+            void sendPasswordResetEmail(auth, email, actionCodeSettings).catch(
+              (se) => {
+                console.warn(
+                  "[DriverRegister] sendPasswordResetEmail failed",
+                  se,
+                );
+              },
+            );
             throw new Error(
               "This email already has an account. We've sent a password reset link. Please reset your password, sign in, then return and click Submit again.",
             );
@@ -786,6 +795,10 @@ export function OnDemandDriverRegisterPage() {
                   onChange={(e) => handleInput(e, ["email"])}
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition text-sm"
                 />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  You’ll set your password via a link sent to your email after
+                  you submit.
+                </p>
                 <input
                   type="tel"
                   placeholder="Phone Number"
@@ -1069,6 +1082,9 @@ export function OnDemandDriverRegisterPage() {
                     direction="top"
                     delay={24}
                   />
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    Max 10MB per file. PDF or image (JPG/PNG/WebP/HEIC).
+                  </p>
                 </div>
                 <div className="space-y-4">
                   {/* Driver's License */}
@@ -1091,6 +1107,7 @@ export function OnDemandDriverRegisterPage() {
                       Upload
                       <input
                         type="file"
+                        accept="image/*,application/pdf"
                         required
                         className="sr-only"
                         onChange={(e) =>
@@ -1122,6 +1139,7 @@ export function OnDemandDriverRegisterPage() {
                       Upload
                       <input
                         type="file"
+                        accept="image/*,application/pdf"
                         required
                         className="sr-only"
                         onChange={(e) =>
@@ -1153,6 +1171,7 @@ export function OnDemandDriverRegisterPage() {
                       Upload
                       <input
                         type="file"
+                        accept="image/*,application/pdf"
                         className="sr-only"
                         onChange={(e) =>
                           handleFileChange(

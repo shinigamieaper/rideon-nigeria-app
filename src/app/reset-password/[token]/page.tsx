@@ -27,8 +27,8 @@ export default function ResetPasswordPage() {
       setError("Invalid or missing reset code. Please request a new link.");
       return;
     }
-    if (!password || password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters long.");
       return;
     }
     if (password !== confirmPassword) {
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
           <BlurText
             as="p"
             className="mt-2 text-sm text-gray-600 dark:text-slate-400"
-            text="Your new password must be different from previous passwords."
+            text="Use at least 8 characters. Your new password must be different from previous passwords."
             animateBy="words"
             direction="top"
             delay={24}
