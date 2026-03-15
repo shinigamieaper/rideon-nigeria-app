@@ -5,6 +5,10 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import type { BannerPortal } from "@/types/brandBanner";
 
 const OLD_BANNER_DOC_ID = "brand_banner";
+const LEGACY_BANNER_FALLBACK_ENABLED =
+  String(process.env.BANNER_LEGACY_FALLBACK || "")
+    .trim()
+    .toLowerCase() === "true";
 
 type Portal = BannerPortal;
 
@@ -294,9 +298,13 @@ export async function GET(req: Request) {
     // Try new multi-banner system first, fall back to old single-banner doc
     let result = await pickNewBanner(normalizedPortal);
 
-    if (!result) {
+    if (!result && LEGACY_BANNER_FALLBACK_ENABLED) {
       const oldResult = await pickOldBanner(normalizedPortal);
       result = oldResult;
+    }
+
+    if (!result) {
+      result = { show: false };
     }
 
     updateCache(normalizedPortal, result);
